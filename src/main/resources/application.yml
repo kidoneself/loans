@@ -1,0 +1,34 @@
+# 应用配置（主配置文件）
+spring:
+  application:
+    name: loans-management-system
+  
+  # 环境配置（IDEA 运行时使用，Maven 打包时可通过启动参数覆盖）
+  profiles:
+    active: test
+  
+  # 静态资源配置
+  web:
+    resources:
+      static-locations: classpath:/static/
+      add-mappings: true
+
+# MyBatis 配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.finance.loans.model
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# 服务器配置
+server:
+  port: 8080
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.finance.loans: DEBUG
+    com.finance.loans.mapper: DEBUG
+

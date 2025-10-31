@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工资周期预测 - 贷款管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .big-number {
+            font-size: 48px;
+            font-weight: bold;
+        }
+        .flow-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .flow-item.income {
+            border-left: 4px solid #4CAF50;
+            background: #E8F5E9;
+        }
+        .flow-item.expense {
+            border-left: 4px solid #f44336;
+            background: #FFEBEE;
+        }
+        .timeline-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .timeline-item.expense-item {
+            border-left-color: #f44336;
+            background: #FFEBEE;
+        }
+        .timeline-item.income-item {
+            border-left-color: #4CAF50;
+            background: #E8F5E9;
+        }
+        .timeline-date {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        .timeline-balance {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #ccc;
+        }
+        .balance-positive {
+            color: #4CAF50;
+        }
+        .balance-negative {
+            color: #f44336;
+        }
+        .balance-warning {
+            color: #FF9800;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html" style="font-weight: bold; font-size: 20px;">
+                <i class="bi bi-wallet2"></i> 贷款管理系统
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="index.html"><i class="bi bi-house-door"></i> 首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="loans.html"><i class="bi bi-credit-card"></i> 贷款管理</a></li>
+                    <li class="nav-item"><a class="nav-link" href="income-expenses.html"><i class="bi bi-cash-stack"></i> 收入支出</a></li>
+                    <li class="nav-item"><a class="nav-link" href="forecast.html"><i class="bi bi-graph-up"></i> 固定收支</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="salary-cycle.html"><i class="bi bi-calendar-range"></i> 工资周期 ⭐</a></li>
+                    <li class="nav-item"><a class="nav-link" href="calendar.html"><i class="bi bi-calendar3"></i> 还款日历</a></li>
+                    <li class="nav-item"><a class="nav-link" href="debt-trend.html"><i class="bi bi-graph-down"></i> 债务趋势</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4" style="max-width: 900px;">
+        <!-- 功能说明 -->
+        <div class="alert alert-success mb-4">
+            <h5><i class="bi bi-star-fill"></i> 工资周期预测（推荐使用）</h5>
+            <p class="mb-2"><strong>真实资金预测</strong> - 基于当前实际余额，预测到下个发薪日够不够还钱</p>
+            <ul class="mb-0">
+                <li>✅ 从当前实际余额出发</li>
+                <li>✅ 计算到发薪日前的所有支出</li>
+                <li>✅ 支持临时收支</li>
+                <li>✅ 时间线展示，逐笔计算余额</li>
+                <li>✅ 准确判断够不够还款</li>
+            </ul>
+        </div>
+
+        <!-- 当前周期大卡片 -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="card-body p-4">
+                <h4><i class="bi bi-calendar-range"></i> 当前工资周期</h4>
+                <h3 id="cycleRange" class="mb-3">2025-10-20 ~ 2025-11-20</h3>
+                <div class="text-center">
+                    <div style="font-size: 14px; opacity: 0.9;">距离发薪还有</div>
+                    <div class="big-number" style="color: #FFD54F;" id="daysToSalary">15</div>
+                    <div>天</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 当前余额 -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">💰 当前余额</h6>
+                        <h2 id="currentBalance">¥0.00</h2>
+                    </div>
+                    <button class="btn btn-primary" onclick="updateBalance()">
+                        <i class="bi bi-pencil"></i> 更新
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 资金流水时间线 -->
+        <div class="card mb-3">
+            <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <i class="bi bi-clock-history"></i> 资金流水时间线
+            </div>
+            <div class="card-body">
+                <div id="timeline">
+                    <div class="text-center text-muted">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快捷录入 -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="bi bi-pencil"></i> 快捷录入
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success" onclick="addTempIncome()">
+                        <i class="bi bi-plus-circle"></i> 录入临时收入
+                    </button>
+                    <button class="btn btn-danger" onclick="addTempExpense()">
+                        <i class="bi bi-dash-circle"></i> 录入临时支出
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 预测结果 -->
+        <div class="card mb-4" id="resultCard">
+            <div class="card-body p-4 text-center">
+                <h5 class="text-muted mb-3">发薪前预计余额</h5>
+                <h1 class="big-number mb-3" id="beforeSalary" style="color: #667eea;">¥0.00</h1>
+                <div class="mb-3" id="statusMessage"></div>
+                <hr>
+                <h6 class="text-muted mb-2">发薪后预计余额</h6>
+                <h2 id="afterSalary" style="color: #4CAF50;">¥0.00</h2>
+            </div>
+        </div>
+
+        <!-- 设置 -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-gear"></i> 工资设置
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>工资发放日：每月</label>
+                        <input type="number" class="form-control" id="salaryDay" min="1" max="31" value="20">
+                        <small class="text-muted">号</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label>工资金额</label>
+                        <input type="number" class="form-control" id="salaryAmount" value="20000">
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="saveSettings()">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 录入临时收支模态框 -->
+    <div class="modal fade" id="tempModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 id="tempModalTitle">录入临时收支</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="tempType">
+                    <div class="mb-3">
+                        <label>金额</label>
+                        <input type="number" class="form-control" id="tempAmount" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label>说明</label>
+                        <input type="text" class="form-control" id="tempDesc" placeholder="比如：私活、买东西">
+                    </div>
+                    <div class="mb-3">
+                        <label>日期</label>
+                        <input type="date" class="form-control" id="tempDate">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button class="btn btn-primary" onclick="saveTempTransaction()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let tempModal;
+
+        window.onload = function() {
+            tempModal = new bootstrap.Modal(document.getElementById('tempModal'));
+            loadCycleData();
+            loadSettings();
+        };
+
+        async function loadCycleData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/salary-cycle/current`);
+                const data = await response.json();
+                
+                // 调试：打印后端返回的数据
+                console.log('后端返回数据:', data);
+                console.log('时间线数据:', data.timeline);
+                
+                // 更新周期信息
+                const cycleRangeEl = document.getElementById('cycleRange');
+                const daysToSalaryEl = document.getElementById('daysToSalary');
+                const currentBalanceEl = document.getElementById('currentBalance');
+                const beforeSalaryEl = document.getElementById('beforeSalary');
+                const afterSalaryEl = document.getElementById('afterSalary');
+                
+                if (cycleRangeEl) cycleRangeEl.textContent = data.cycleStart + ' ~ ' + data.cycleEnd;
+                if (daysToSalaryEl) daysToSalaryEl.textContent = data.daysToSalary || 0;
+                if (currentBalanceEl) currentBalanceEl.textContent = '¥' + data.currentBalance.toFixed(2);
+                if (beforeSalaryEl) beforeSalaryEl.textContent = '¥' + data.beforeSalaryBalance.toFixed(2);
+                if (afterSalaryEl) afterSalaryEl.textContent = '¥' + data.afterSalaryBalance.toFixed(2);
+                
+                // 渲染时间线
+                if (data.timeline && data.timeline.length > 0) {
+                    renderTimeline(data.timeline, data.currentBalance);
+                } else {
+                    document.getElementById('timeline').innerHTML = 
+                        '<div class="text-center text-muted">本周期内暂无支出</div>';
+                }
+                
+                // 更新状态信息
+                const statusEl = document.getElementById('statusMessage');
+                const beforeSalaryEl2 = document.getElementById('beforeSalary');
+                
+                if (statusEl) {
+                    if (data.isSufficient) {
+                        statusEl.innerHTML = '<div class="alert alert-success mb-0">✅ 够还！发薪前还能剩 ¥' + 
+                            data.beforeSalaryBalance.toFixed(2) + '</div>';
+                        if (beforeSalaryEl2) beforeSalaryEl2.style.color = '#4CAF50';
+                    } else {
+                        const shortage = Math.abs(data.beforeSalaryBalance);
+                        statusEl.innerHTML = '<div class="alert alert-danger mb-0">⚠️ 不够还！差 ¥' + 
+                            shortage.toFixed(2) + '<br>💡 建议：想办法补上或调整支出</div>';
+                        if (beforeSalaryEl2) beforeSalaryEl2.style.color = '#f44336';
+                    }
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        // 渲染时间线
+        function renderTimeline(timeline, startBalance) {
+            const container = document.getElementById('timeline');
+            
+            if (!timeline || timeline.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted">本周期内暂无支出</div>';
+                return;
+            }
+            
+            let html = `
+                <div class="timeline-item" style="background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border-left-color: #2196F3;">
+                    <div class="timeline-date" style="color: #2196F3;">
+                        <i class="bi bi-calendar-check"></i> 今天
+                    </div>
+                    <div style="font-size: 14px; color: #666;">当前余额</div>
+                    <div class="timeline-balance balance-positive">
+                        💰 ¥${startBalance.toFixed(2)}
+                    </div>
+                </div>
+            `;
+            
+            let lastBalance = startBalance;
+            
+            timeline.forEach(item => {
+                const isIncome = item.isIncome;
+                const itemClass = isIncome ? 'income-item' : 'expense-item';
+                const balanceAfter = item.balanceAfter;
+                const balanceClass = balanceAfter >= 0 ? 'balance-positive' : 'balance-negative';
+                const icon = isIncome ? '➕' : '➖';
+                
+                lastBalance = balanceAfter;
+                
+                html += `
+                    <div class="timeline-item ${itemClass}">
+                        <div class="timeline-date">
+                            <i class="bi bi-calendar-event"></i> ${item.date}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${item.description}</strong>
+                                ${item.platform ? '<div style="font-size: 12px; color: #999;">' + item.platform + '</div>' : ''}
+                            </div>
+                            <div style="font-size: 20px; font-weight: bold; color: ${isIncome ? '#4CAF50' : '#f44336'};">
+                                ${icon}¥${item.amount.toFixed(2)}
+                            </div>
+                        </div>
+                        <div class="timeline-balance ${balanceClass}">
+                            → 剩余: ¥${balanceAfter.toFixed(2)}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // 调试：打印最后余额
+            console.log('时间线最后余额:', lastBalance);
+            
+            container.innerHTML = html;
+        }
+
+        async function loadSettings() {
+            try {
+                const dayResp = await fetch(`${API_BASE_URL}/salary-cycle/config/salary-day`);
+                const day = await dayResp.json();
+                document.getElementById('salaryDay').value = day;
+                
+                const amountResp = await fetch(`${API_BASE_URL}/salary-cycle/config/salary-amount`);
+                const amount = await amountResp.json();
+                document.getElementById('salaryAmount').value = amount;
+            } catch (error) {
+                console.error('加载设置失败:', error);
+            }
+        }
+
+        async function saveSettings() {
+            try {
+                const day = parseInt(document.getElementById('salaryDay').value);
+                const amount = parseFloat(document.getElementById('salaryAmount').value);
+                
+                await fetch(`${API_BASE_URL}/salary-cycle/config/salary-day`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({day: day})
+                });
+                
+                await fetch(`${API_BASE_URL}/salary-cycle/config/salary-amount`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({amount: amount})
+                });
+                
+                alert('✓ 设置已保存');
+                loadCycleData();
+            } catch (error) {
+                alert('❌ 保存失败');
+            }
+        }
+
+        function updateBalance() {
+            const newBalance = prompt('请输入当前实际余额：');
+            if (newBalance !== null) {
+                // 调用余额更新API
+                window.location.href = 'index.html';
+            }
+        }
+
+        function addTempIncome() {
+            document.getElementById('tempType').value = 'income';
+            document.getElementById('tempModalTitle').textContent = '录入临时收入';
+            document.getElementById('tempDate').valueAsDate = new Date();
+            tempModal.show();
+        }
+
+        function addTempExpense() {
+            document.getElementById('tempType').value = 'expense';
+            document.getElementById('tempModalTitle').textContent = '录入临时支出';
+            document.getElementById('tempDate').valueAsDate = new Date();
+            tempModal.show();
+        }
+
+        async function saveTempTransaction() {
+            const data = {
+                type: document.getElementById('tempType').value,
+                amount: parseFloat(document.getElementById('tempAmount').value),
+                description: document.getElementById('tempDesc').value,
+                transactionDate: document.getElementById('tempDate').value
+            };
+            
+            try {
+                await fetch(`${API_BASE_URL}/salary-cycle/temp-transactions`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                tempModal.hide();
+                alert('✓ 已保存');
+                loadCycleData();
+            } catch (error) {
+                alert('❌ 保存失败');
+            }
+        }
+    </script>
+</body>
+</html>
+

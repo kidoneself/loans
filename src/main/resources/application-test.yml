@@ -1,0 +1,24 @@
+# 测试环境配置（远程数据库 10.10.10.17）
+spring:
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://10.10.10.17:3306/loans?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: MyStrongPass123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # HikariCP 连接池配置
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+# 日志配置（测试环境开启详细日志）
+logging:
+  level:
+    root: INFO
+    com.finance.loans: DEBUG
+    com.finance.loans.mapper: DEBUG
+

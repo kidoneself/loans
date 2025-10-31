@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>债务趋势 - 个人资金管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .container {
+            max-width: 1400px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card h3 {
+            font-size: 2rem;
+            margin: 10px 0;
+        }
+        .stat-card .trend-indicator {
+            font-size: 1.2rem;
+        }
+        .btn-group-toggle .btn {
+            min-width: 80px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html" style="font-weight: bold; font-size: 20px;">
+                <i class="bi bi-wallet2"></i> 贷款管理系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html"><i class="bi bi-house-door"></i> 首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="loans.html"><i class="bi bi-credit-card"></i> 贷款管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="income-expenses.html"><i class="bi bi-cash-stack"></i> 收入支出</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="forecast.html"><i class="bi bi-graph-up"></i> 固定收支</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="salary-cycle.html"><i class="bi bi-calendar-range"></i> 工资周期</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="calendar.html"><i class="bi bi-calendar3"></i> 还款日历</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="debt-trend.html"><i class="bi bi-graph-down"></i> 债务趋势</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 统计卡片 -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div><i class="bi bi-wallet2" style="font-size: 2rem;"></i></div>
+                    <p class="mb-1">当前总欠款</p>
+                    <h3 id="currentDebt">¥0.00</h3>
+                    <small id="currentDate">-</small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-card">
+                    <div><i class="bi bi-graph-down-arrow" style="font-size: 2rem;"></i></div>
+                    <p class="mb-1">近30天减少</p>
+                    <h3 id="thirtyDayDecrease" class="trend-indicator">¥0.00</h3>
+                    <small id="decreasePercent">-</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能说明 -->
+        <div class="alert alert-info mb-4">
+            <h5><i class="bi bi-info-circle"></i> 功能说明</h5>
+            <p class="mb-2">📊 <strong>债务趋势</strong> - 每天自动记录债务总额，可视化您的还款进度</p>
+            <ul class="mb-0">
+                <li>✅ 每天凌晨2点自动记录快照</li>
+                <li>✅ 支持按天/按月查看趋势</li>
+                <li>✅ 直观看到债务减少情况</li>
+                <li>💡 坚持还款，债务曲线会越来越低！</li>
+            </ul>
+        </div>
+
+        <!-- 图表选项 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5><i class="bi bi-graph-down"></i> 债务趋势图</h5>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <!-- 视图切换 -->
+                        <div class="btn-group me-3" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary active" id="btnDaily" onclick="switchView('daily')">
+                                <i class="bi bi-calendar-day"></i> 按天
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="btnMonthly" onclick="switchView('monthly')">
+                                <i class="bi bi-calendar-month"></i> 按月
+                            </button>
+                        </div>
+                        
+                        <!-- 时间范围 -->
+                        <select class="form-select d-inline-block w-auto" id="rangeSelect" onchange="loadTrendData()">
+                            <option value="7">最近7天</option>
+                            <option value="30" selected>最近30天</option>
+                            <option value="60">最近60天</option>
+                            <option value="90">最近90天</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 趋势图 -->
+        <div class="card">
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="debtChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="text-center mt-4">
+            <button class="btn btn-primary" onclick="createSnapshot()">
+                <i class="bi bi-camera"></i> 立即创建快照
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        let chart = null;
+        let currentView = 'daily'; // 'daily' or 'monthly'
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatistics();
+            loadTrendData();
+        });
+
+        // 加载统计数据
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/debt-snapshot/statistics`);
+                const stats = await response.json();
+                
+                document.getElementById('currentDebt').textContent = 
+                    '¥' + Utils.formatMoney(stats.currentDebt || 0);
+                document.getElementById('currentDate').textContent = 
+                    stats.currentDate || '-';
+                
+                const decrease = stats.thirtyDayDecrease || 0;
+                const decreaseEl = document.getElementById('thirtyDayDecrease');
+                
+                if (stats.hasDecrease && decrease > 0) {
+                    decreaseEl.textContent = '↓ ¥' + Utils.formatMoney(decrease);
+                    decreaseEl.classList.add('text-success');
+                    document.getElementById('decreasePercent').textContent = '太棒了！继续加油 💪';
+                } else if (decrease < 0) {
+                    decreaseEl.textContent = '↑ ¥' + Utils.formatMoney(Math.abs(decrease));
+                    decreaseEl.classList.add('text-warning');
+                    document.getElementById('decreasePercent').textContent = '债务增加了，需要注意！';
+                } else {
+                    decreaseEl.textContent = '¥0.00';
+                    document.getElementById('decreasePercent').textContent = '暂无变化';
+                }
+                
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+
+        // 切换视图
+        function switchView(view) {
+            currentView = view;
+            
+            // 更新按钮状态
+            document.getElementById('btnDaily').classList.toggle('active', view === 'daily');
+            document.getElementById('btnMonthly').classList.toggle('active', view === 'monthly');
+            
+            // 更新下拉选项
+            const rangeSelect = document.getElementById('rangeSelect');
+            if (view === 'daily') {
+                rangeSelect.innerHTML = `
+                    <option value="7">最近7天</option>
+                    <option value="30" selected>最近30天</option>
+                    <option value="60">最近60天</option>
+                    <option value="90">最近90天</option>
+                `;
+            } else {
+                rangeSelect.innerHTML = `
+                    <option value="6">最近6个月</option>
+                    <option value="12" selected>最近12个月</option>
+                    <option value="24">最近24个月</option>
+                `;
+            }
+            
+            loadTrendData();
+        }
+
+        // 加载趋势数据
+        async function loadTrendData() {
+            try {
+                const range = document.getElementById('rangeSelect').value;
+                const endpoint = currentView === 'daily' 
+                    ? `${API_BASE_URL}/debt-snapshot/trend/daily?days=${range}`
+                    : `${API_BASE_URL}/debt-snapshot/trend/monthly?months=${range}`;
+                
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                renderChart(data);
+                
+            } catch (error) {
+                console.error('加载趋势数据失败:', error);
+                Utils.showError('加载趋势数据失败');
+            }
+        }
+
+        // 渲染图表
+        function renderChart(data) {
+            const ctx = document.getElementById('debtChart').getContext('2d');
+            
+            // 销毁旧图表
+            if (chart) {
+                chart.destroy();
+            }
+            
+            // 准备数据
+            const labels = data.map(d => currentView === 'daily' ? d.dateDisplay : d.monthDisplay);
+            const debtData = data.map(d => d.totalDebt);
+            const paymentData = data.map(d => d.monthlyPayment);
+            
+            // 创建新图表
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '总欠款',
+                            data: debtData,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: '月还款额',
+                            data: paymentData,
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: false,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14
+                                },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += '¥' + Utils.formatMoney(context.parsed.y);
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + Utils.formatMoney(value);
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        // 手动创建快照
+        async function createSnapshot() {
+            if (!confirm('确认创建今天的债务快照吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/debt-snapshot/create`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    Utils.showSuccess('快照创建成功！');
+                    loadStatistics();
+                    loadTrendData();
+                } else {
+                    Utils.showError('创建失败');
+                }
+            } catch (error) {
+                console.error('创建快照失败:', error);
+                Utils.showError('创建快照失败');
+            }
+        }
+    </script>
+</body>
+</html>
+
