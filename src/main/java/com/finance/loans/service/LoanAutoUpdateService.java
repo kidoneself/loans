@@ -1,7 +1,9 @@
 package com.finance.loans.service;
 
 import com.finance.loans.mapper.LoanMapper;
+import com.finance.loans.mapper.PaymentHistoryMapper;
 import com.finance.loans.model.Loan;
+import com.finance.loans.model.PaymentHistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +24,7 @@ import java.util.List;
 public class LoanAutoUpdateService {
 
     private final LoanMapper loanMapper;
+    private final PaymentHistoryMapper paymentHistoryMapper;
     
     @Value("${loan.auto-update.enabled:false}")
     private boolean autoUpdateEnabled;
@@ -91,9 +94,19 @@ public class LoanAutoUpdateService {
                         
                         // 保存更新
                         loanMapper.update(loan);
+                        
+                        // 创建还款记录
+                        PaymentHistory payment = new PaymentHistory();
+                        payment.setLoanId(loan.getId());
+                        payment.setPaymentAmount(loan.getMonthlyPayment());
+                        payment.setPaymentDate(today);
+                        payment.setAutoDeductBalance(false); // 自动记录不扣减余额
+                        payment.setNote("系统自动记录");
+                        paymentHistoryMapper.insert(payment);
+                        
                         updatedCount++;
                         
-                        log.info("已自动更新贷款 [{}] 的已还期数: {} -> {}", 
+                        log.info("已自动更新贷款 [{}] 的已还期数: {} -> {}，并创建还款记录", 
                             loan.getLoanName(), 
                             loan.getPaidPeriods() - 1, 
                             loan.getPaidPeriods());
