@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>还款计划 - 个人资金管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .container {
+            max-width: 1400px;
+        }
+        
+        /* 时间轴样式 */
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            transform: translateX(-50%);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            width: 50%;
+            padding: 0 40px;
+        }
+        .timeline-item.left {
+            left: 0;
+            text-align: right;
+        }
+        .timeline-item.right {
+            left: 50%;
+            text-align: left;
+        }
+        .timeline-dot {
+            position: absolute;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border: 4px solid #667eea;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .timeline-item.left .timeline-dot {
+            right: -10px;
+        }
+        .timeline-item.right .timeline-dot {
+            left: -10px;
+        }
+        .timeline-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .timeline-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+        }
+        
+        /* 进度条增强样式 */
+        .progress-enhanced {
+            height: 30px;
+            border-radius: 15px;
+            background: #f0f0f0;
+            position: relative;
+            overflow: visible;
+        }
+        .progress-bar-enhanced {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            position: relative;
+        }
+        .progress-label {
+            position: absolute;
+            right: 10px;
+            color: #666;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* 卡片增强 */
+        .loan-plan-card {
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+        .loan-plan-card:hover {
+            border-left-color: #764ba2;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        
+        /* 完成徽章 */
+        .payoff-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .payoff-soon {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .payoff-mid {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .payoff-long {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 30px;
+            }
+            .timeline-item {
+                width: 100%;
+                left: 0 !important;
+                text-align: left !important;
+                padding-left: 70px;
+            }
+            .timeline-item .timeline-dot {
+                left: 20px !important;
+            }
+        }
+        
+        /* 统计卡片 */
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html" style="font-weight: bold; font-size: 20px;">
+                <i class="bi bi-wallet2"></i> 贷款管理系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html"><i class="bi bi-house-door"></i> 首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="loans.html"><i class="bi bi-credit-card"></i> 贷款管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="income-expenses.html"><i class="bi bi-cash-stack"></i> 收入支出</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="repayment-plan.html"><i class="bi bi-calendar-check"></i> 还款计划 ⭐</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="forecast.html"><i class="bi bi-graph-up"></i> 固定收支</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="salary-cycle.html"><i class="bi bi-calendar-range"></i> 工资周期</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="calendar.html"><i class="bi bi-calendar3"></i> 还款日历</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="debt-trend.html"><i class="bi bi-graph-down"></i> 债务趋势</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 页面标题 -->
+        <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="card-body">
+                <h3 class="mb-2"><i class="bi bi-calendar-check"></i> 还款计划总览</h3>
+                <p class="mb-0">清晰掌握每笔贷款的还款进度和预计还清时间</p>
+            </div>
+        </div>
+
+        <!-- 统计概览 -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="bi bi-list-check"></i> 活跃贷款</div>
+                    <div class="stat-number" style="color: #667eea;" id="activeCount">0</div>
+                    <div class="stat-label">笔</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="bi bi-hourglass-split"></i> 最快还清</div>
+                    <div class="stat-number" style="color: #28a745;" id="fastestPayoff">-</div>
+                    <div class="stat-label" id="fastestLoanName">-</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="bi bi-calendar-event"></i> 全部还清</div>
+                    <div class="stat-number" style="color: #f44336;" id="allPayoff">-</div>
+                    <div class="stat-label">预计日期</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="bi bi-cash-stack"></i> 总负债</div>
+                    <div class="stat-number" style="color: #ff9800;" id="totalDebt">¥0</div>
+                    <div class="stat-label">剩余金额</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 还款计划列表 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clipboard-data"></i> 详细还款计划</h5>
+            </div>
+            <div class="card-body">
+                <div id="planList"></div>
+            </div>
+        </div>
+
+        <!-- 还款时间轴 -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> 还清时间轴</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline" id="timeline"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRepaymentPlan();
+        });
+
+        async function loadRepaymentPlan() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/loans/repayment-plan`);
+                const data = await response.json();
+                
+                // 更新统计信息
+                updateStatistics(data);
+                
+                // 渲染还款计划列表
+                renderPlanList(data.loans);
+                
+                // 渲染时间轴
+                renderTimeline(data.loans);
+                
+            } catch (error) {
+                console.error('加载还款计划失败:', error);
+                Utils.showError('加载还款计划失败');
+            }
+        }
+
+        function updateStatistics(data) {
+            document.getElementById('activeCount').textContent = data.activeCount;
+            document.getElementById('totalDebt').textContent = '¥' + Utils.formatMoney(data.totalDebt);
+            
+            if (data.loans && data.loans.length > 0) {
+                // 最快还清
+                const fastest = data.loans[0];
+                document.getElementById('fastestPayoff').textContent = fastest.remainingMonths + '个月';
+                document.getElementById('fastestLoanName').textContent = fastest.loanName;
+                
+                // 全部还清
+                const latest = data.loans[data.loans.length - 1];
+                if (latest.payoffDate) {
+                    document.getElementById('allPayoff').textContent = formatDate(latest.payoffDate);
+                }
+            }
+        }
+
+        function renderPlanList(loans) {
+            const container = document.getElementById('planList');
+            
+            if (!loans || loans.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">暂无活跃贷款</p>';
+                return;
+            }
+            
+            container.innerHTML = loans.map(loan => {
+                const progress = loan.repaidPercentage;
+                const payoffClass = loan.remainingMonths <= 3 ? 'payoff-soon' : 
+                                   loan.remainingMonths <= 12 ? 'payoff-mid' : 'payoff-long';
+                
+                return `
+                    <div class="loan-plan-card card mb-3">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <h5 class="mb-2">
+                                        <i class="bi bi-credit-card-2-front"></i> ${loan.loanName}
+                                    </h5>
+                                    <p class="text-muted mb-1">
+                                        <i class="bi bi-building"></i> ${loan.platform || '未设置平台'}
+                                    </p>
+                                    <span class="payoff-badge ${payoffClass}">
+                                        <i class="bi bi-calendar-check"></i> 
+                                        ${loan.remainingMonths}个月后还清
+                                    </span>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-2">
+                                        <small class="text-muted">剩余金额</small>
+                                        <h4 class="mb-0" style="color: #f44336;">¥${Utils.formatMoney(loan.remainingAmount)}</h4>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">每月还款</small>
+                                        <h5 class="mb-0" style="color: #ff9800;">¥${Utils.formatMoney(loan.monthlyPayment)}</h5>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted">预计还清日期</small>
+                                        <div style="font-weight: bold; color: #667eea;">
+                                            <i class="bi bi-flag-fill"></i> ${formatDate(loan.payoffDate)}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-2">
+                                        <small class="text-muted">还款进度</small>
+                                    </div>
+                                    <div class="progress-enhanced">
+                                        <div class="progress-bar-enhanced" style="width: ${progress}%">
+                                            ${progress.toFixed(1)}%
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 text-center">
+                                        <small class="text-muted">
+                                            已还 ${loan.paidPeriods}/${loan.totalPeriods} 期
+                                            （剩余 ${loan.remainingPeriods} 期）
+                                        </small>
+                                    </div>
+                                    <div class="mt-2 text-center">
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                onclick="window.location.href='loan-detail.html?id=${loan.id}'">
+                                            <i class="bi bi-eye"></i> 查看详情
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTimeline(loans) {
+            const container = document.getElementById('timeline');
+            
+            if (!loans || loans.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted">暂无活跃贷款</p>';
+                return;
+            }
+            
+            // 按还清日期排序
+            const sortedLoans = [...loans].sort((a, b) => {
+                return new Date(a.payoffDate) - new Date(b.payoffDate);
+            });
+            
+            container.innerHTML = sortedLoans.map((loan, index) => {
+                const isLeft = index % 2 === 0;
+                const monthsColor = loan.remainingMonths <= 3 ? '#28a745' : 
+                                   loan.remainingMonths <= 12 ? '#ffc107' : '#f44336';
+                
+                return `
+                    <div class="timeline-item ${isLeft ? 'left' : 'right'}">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-card">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-credit-card"></i> ${loan.loanName}
+                                </h5>
+                                <span class="badge" style="background: ${monthsColor};">
+                                    ${loan.remainingMonths}个月
+                                </span>
+                            </div>
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-building"></i> ${loan.platform || '未设置'}
+                            </p>
+                            <div class="mb-2">
+                                <i class="bi bi-calendar-check text-primary"></i>
+                                <strong>预计还清：</strong>
+                                <span style="color: #667eea; font-weight: bold;">
+                                    ${formatDate(loan.payoffDate)}
+                                </span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="bi bi-cash text-danger"></i>
+                                <strong>剩余：</strong>
+                                <span style="color: #f44336;">¥${Utils.formatMoney(loan.remainingAmount)}</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" 
+                                     style="width: ${loan.repaidPercentage}%; background: ${monthsColor};">
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                已还 ${loan.paidPeriods}/${loan.totalPeriods} 期 (${loan.repaidPercentage.toFixed(1)}%)
+                            </small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${year}年${month}月${day}日`;
+        }
+    </script>
+</body>
+</html>
+

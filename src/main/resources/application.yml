@@ -32,3 +32,12 @@ logging:
     com.finance.loans: DEBUG
     com.finance.loans.mapper: DEBUG
 
+# 业务配置
+loan:
+  auto-update:
+    # 是否启用自动更新已还期数（默认：false，需要手动开启）
+    enabled: true
+    # 每月还款日后，自动增加已还期数（假设用户按时还款）
+    # 如果设置为 false，需要手动记录还款
+    # 建议：如果您能保证按时还款，可以设置为 true
+

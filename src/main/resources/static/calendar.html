@@ -532,10 +532,13 @@
                         <a class="nav-link" href="income-expenses.html"><i class="bi bi-cash-stack"></i> 收入支出</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="repayment-plan.html"><i class="bi bi-calendar-check"></i> 还款计划 ⭐</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="forecast.html"><i class="bi bi-graph-up"></i> 固定收支</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="salary-cycle.html"><i class="bi bi-calendar-range"></i> 工资周期 ⭐</a>
+                        <a class="nav-link" href="salary-cycle.html"><i class="bi bi-calendar-range"></i> 工资周期</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="calendar.html"><i class="bi bi-calendar3"></i> 还款日历</a>
@@ -656,6 +659,35 @@
         let selectedPayments = new Set(); // 多选的还款项
         let isMultiSelectMode = false; // 是否处于多选模式
 
+        // 调试信息
+        function showDebugInfo() {
+            const today = new Date();
+            const debugInfo = loans.map(loan => {
+                // 计算第一期还款日期
+                let firstPaymentDate = '';
+                if (loan.startDate && loan.paymentDay) {
+                    const borrowDate = new Date(loan.startDate);
+                    const firstPayment = new Date(borrowDate);
+                    firstPayment.setMonth(borrowDate.getMonth() + 1);
+                    firstPayment.setDate(loan.paymentDay);
+                    firstPaymentDate = firstPayment.toISOString().slice(0, 10);
+                }
+                
+                return `【${loan.loanName}】
+- ID: ${loan.id}
+- 总期数: ${loan.totalPeriods}
+- 已还期数: ${loan.paidPeriods}
+- 剩余期数: ${loan.totalPeriods - loan.paidPeriods}
+- 还款日: ${loan.paymentDay}号
+- 借款日期: ${loan.startDate || '未设置'}
+- 第一期还款: ${firstPaymentDate || '未知'}
+- 状态: ${loan.status}`;
+            }).join('\n\n');
+            
+            alert('=== 贷款数据调试信息 ===\n\n' + debugInfo);
+            console.log('Loans Data:', loans);
+        }
+
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadLoans();
@@ -736,9 +768,79 @@
             return `${loanId}-${year}-${month}`;
         }
 
-        // 检查是否已还款
+        // 检查是否已还款（完全基于数据库的已还期数）
         function isPaid(loanId, year, month) {
-            return paidPayments.has(getPaymentKey(loanId, year, month));
+            // 根据贷款的已还期数和还款日自动判断
+            const loan = loans.find(l => l.id === loanId);
+            if (!loan) {
+                return false;
+            }
+            
+            // 如果没有期数信息，无法自动判断
+            if (!loan.totalPeriods || loan.paidPeriods === null || loan.paidPeriods === undefined) {
+                return false;
+            }
+            
+            // 如果已还期数 <= 0，说明还没开始还
+            if (loan.paidPeriods <= 0) {
+                return false;
+            }
+            
+            // 如果没有还款日信息，无法判断
+            if (!loan.paymentDay) {
+                return false;
+            }
+            
+            // 构造该月的还款日期
+            const paymentDate = new Date(year, month - 1, loan.paymentDay);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // 只比较日期，不比较时间
+            paymentDate.setHours(0, 0, 0, 0);
+            
+            // 如果还款日期还没到，肯定没还
+            if (paymentDate > today) {
+                return false;
+            }
+            
+            // 如果还款日期已经过了，根据期数判断
+            // 计算第一期还款月份（借款日期的下一个月）
+            let firstPaymentMonth;
+            if (loan.startDate) {
+                const borrowDate = new Date(loan.startDate);
+                firstPaymentMonth = new Date(borrowDate);
+                firstPaymentMonth.setMonth(borrowDate.getMonth() + 1); // 借款后一个月开始还款
+                firstPaymentMonth.setDate(1); // 设为该月第一天
+            } else {
+                // 推算：从今天往前推已还期数
+                const today = new Date();
+                firstPaymentMonth = new Date(today);
+                firstPaymentMonth.setMonth(today.getMonth() - loan.paidPeriods + 1);
+                firstPaymentMonth.setDate(1);
+            }
+            
+            // 计算该月是第几期（从第一期还款月份算起）
+            const targetMonth = new Date(year, month - 1, 1);
+            const monthsDiff = (targetMonth.getFullYear() - firstPaymentMonth.getFullYear()) * 12 
+                             + (targetMonth.getMonth() - firstPaymentMonth.getMonth());
+            
+            const periodNumber = monthsDiff + 1; // 第几期（从1开始）
+            
+            // 调试日志（已禁用）
+            // console.log(`[isPaid] ${loan.loanName} ${year}-${month}:`, {
+            //     paymentDay: loan.paymentDay,
+            //     paidPeriods: loan.paidPeriods,
+            //     startDate: loan.startDate,
+            //     firstPaymentMonth: firstPaymentMonth.toISOString().slice(0,10),
+            //     targetMonth: targetMonth.toISOString().slice(0,10),
+            //     periodNumber,
+            //     monthsDiff,
+            //     paymentDatePassed: paymentDate <= today,
+            //     shouldBePaid: periodNumber > 0 && periodNumber <= loan.paidPeriods,
+            //     result: periodNumber > 0 && periodNumber <= loan.paidPeriods
+            // });
+            
+            // 如果这期的期数 <= 已还期数，且还款日期已过，说明已经还了
+            return periodNumber > 0 && periodNumber <= loan.paidPeriods;
         }
 
         // 渲染日历

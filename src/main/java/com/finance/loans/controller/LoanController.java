@@ -137,5 +137,13 @@ public class LoanController {
     public ResponseEntity<Map<String, Object>> getLoanDetail(@PathVariable Long id) {
         return ResponseEntity.ok(loanService.getLoanDetail(id));
     }
+
+    /**
+     * 获取还款计划
+     */
+    @GetMapping("/repayment-plan")
+    public ResponseEntity<Map<String, Object>> getRepaymentPlan() {
+        return ResponseEntity.ok(loanService.getRepaymentPlan());
+    }
 }
 

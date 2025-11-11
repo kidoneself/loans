@@ -286,6 +286,187 @@ public class LoanService {
         
         return detail;
     }
+
+    /**
+     * 获取还款计划
+     */
+    public Map<String, Object> getRepaymentPlan() {
+        List<Loan> activeLoans = loanMapper.findByStatus("active");
+        
+        // 构建还款计划列表
+        List<Map<String, Object>> loanPlans = new java.util.ArrayList<>();
+        BigDecimal totalDebt = BigDecimal.ZERO;
+        
+        for (Loan loan : activeLoans) {
+            Map<String, Object> plan = new java.util.HashMap<>();
+            
+            // 基本信息
+            plan.put("id", loan.getId());
+            plan.put("loanName", loan.getLoanName());
+            plan.put("platform", loan.getPlatform());
+            plan.put("remainingAmount", loan.getRemainingAmount());
+            plan.put("monthlyPayment", loan.getMonthlyPayment());
+            plan.put("paymentDay", loan.getPaymentDay());
+            
+            // 计算剩余期数
+            int remainingPeriods = 0;
+            if (loan.getTotalPeriods() != null && loan.getPaidPeriods() != null) {
+                remainingPeriods = loan.getTotalPeriods() - loan.getPaidPeriods();
+            }
+            plan.put("totalPeriods", loan.getTotalPeriods());
+            plan.put("paidPeriods", loan.getPaidPeriods());
+            plan.put("remainingPeriods", remainingPeriods);
+            
+            // 使用 Loan 模型的 calculatePayoffDate 方法（已优化，考虑还款日）
+            LocalDate payoffDate = loan.calculatePayoffDate();
+            plan.put("payoffDate", payoffDate);
+            
+            // 根据还清日期计算剩余月数（更准确）
+            int remainingMonths = 0;
+            if (payoffDate != null) {
+                LocalDate today = LocalDate.now();
+                // 计算从今天到还清日期相差多少个月
+                java.time.Period period = java.time.Period.between(today, payoffDate);
+                remainingMonths = period.getYears() * 12 + period.getMonths();
+                
+                // 如果还清日期在今天之前或就是今天，剩余月数为0
+                if (remainingMonths < 0 || payoffDate.equals(today)) {
+                    remainingMonths = 0;
+                }
+            }
+            plan.put("remainingMonths", remainingMonths);
+            
+            // 计算还款进度
+            double repaidPercentage = loan.getRepaidPercentage();
+            plan.put("repaidPercentage", repaidPercentage);
+            
+            loanPlans.add(plan);
+            totalDebt = totalDebt.add(loan.getRemainingAmount());
+        }
+        
+        // 按还清日期排序（最快还清的在前面）
+        loanPlans.sort((a, b) -> {
+            Integer monthsA = (Integer) a.get("remainingMonths");
+            Integer monthsB = (Integer) b.get("remainingMonths");
+            return monthsA.compareTo(monthsB);
+        });
+        
+        // 构建返回结果
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("loans", loanPlans);
+        result.put("activeCount", activeLoans.size());
+        result.put("totalDebt", totalDebt);
+        
+        return result;
+    }
+
+    /**
+     * 生成历史还款记录
+     * 根据贷款的已还期数、开始日期、还款日等信息，自动生成历史还款记录
+     */
+    @Transactional
+    public Map<String, Object> generatePaymentHistory(Long loanId) {
+        Map<String, Object> result = new java.util.HashMap<>();
+        int totalGenerated = 0;
+        int skipped = 0;
+        List<String> details = new java.util.ArrayList<>();
+        
+        // 获取要处理的贷款列表
+        List<Loan> loansToProcess;
+        if (loanId != null) {
+            Loan loan = loanMapper.findById(loanId);
+            if (loan == null) {
+                result.put("success", false);
+                result.put("message", "贷款不存在");
+                return result;
+            }
+            loansToProcess = java.util.Collections.singletonList(loan);
+        } else {
+            loansToProcess = loanMapper.findByStatus("active");
+        }
+        
+        for (Loan loan : loansToProcess) {
+            try {
+                // 验证必要字段
+                if (loan.getPaidPeriods() == null || loan.getPaidPeriods() <= 0) {
+                    details.add(loan.getLoanName() + ": 跳过（已还期数为0）");
+                    skipped++;
+                    continue;
+                }
+                
+                if (loan.getPaymentDay() == null) {
+                    details.add(loan.getLoanName() + ": 跳过（缺少还款日）");
+                    skipped++;
+                    continue;
+                }
+                
+                // 计算第一期还款日期
+                LocalDate firstPaymentDate;
+                if (loan.getStartDate() != null) {
+                    // 借款日期的下一个月开始还款
+                    firstPaymentDate = loan.getStartDate().plusMonths(1).withDayOfMonth(
+                        Math.min(loan.getPaymentDay(), loan.getStartDate().plusMonths(1).lengthOfMonth())
+                    );
+                } else {
+                    // 如果没有开始日期，从今天往前推算
+                    LocalDate today = LocalDate.now();
+                    firstPaymentDate = today.minusMonths(loan.getPaidPeriods() - 1)
+                        .withDayOfMonth(Math.min(loan.getPaymentDay(), today.lengthOfMonth()));
+                }
+                
+                int generated = 0;
+                
+                // 生成每一期的还款记录
+                for (int i = 0; i < loan.getPaidPeriods(); i++) {
+                    LocalDate paymentDate = firstPaymentDate.plusMonths(i)
+                        .withDayOfMonth(Math.min(loan.getPaymentDay(), 
+                            firstPaymentDate.plusMonths(i).lengthOfMonth()));
+                    
+                    // 检查是否已经有这个月的还款记录
+                    List<PaymentHistory> existingPayments = paymentHistoryMapper.findByLoanId(loan.getId());
+                    boolean alreadyExists = existingPayments.stream()
+                        .anyMatch(p -> p.getPaymentDate().getYear() == paymentDate.getYear()
+                                    && p.getPaymentDate().getMonth() == paymentDate.getMonth());
+                    
+                    if (alreadyExists) {
+                        continue; // 跳过已存在的记录
+                    }
+                    
+                    // 创建还款记录
+                    PaymentHistory payment = new PaymentHistory();
+                    payment.setLoanId(loan.getId());
+                    payment.setPaymentAmount(loan.getMonthlyPayment());
+                    payment.setPaymentDate(paymentDate);
+                    payment.setAutoDeductBalance(false); // 历史记录不扣减余额
+                    payment.setNote("系统自动生成的历史记录");
+                    
+                    paymentHistoryMapper.insert(payment);
+                    generated++;
+                }
+                
+                if (generated > 0) {
+                    details.add(loan.getLoanName() + ": 生成了 " + generated + " 条记录");
+                    totalGenerated += generated;
+                } else {
+                    details.add(loan.getLoanName() + ": 记录已存在，跳过");
+                    skipped++;
+                }
+                
+            } catch (Exception e) {
+                details.add(loan.getLoanName() + ": 失败 - " + e.getMessage());
+                skipped++;
+            }
+        }
+        
+        result.put("success", true);
+        result.put("totalGenerated", totalGenerated);
+        result.put("skipped", skipped);
+        result.put("totalProcessed", loansToProcess.size());
+        result.put("details", details);
+        result.put("message", String.format("处理完成：生成 %d 条记录，跳过 %d 笔", totalGenerated, skipped));
+        
+        return result;
+    }
 }
 
 
