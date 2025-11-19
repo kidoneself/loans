@@ -2,7 +2,7 @@
 spring:
   # 数据源配置
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/loans?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://43.134.58.162:3306/loans?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: loans
     password: a123456
     driver-class-name: com.mysql.cj.jdbc.Driver

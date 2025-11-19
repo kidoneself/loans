@@ -1,268 +1,270 @@
-# 个人资金 & 网贷管理系统
-
-> 一个简单易用的个人财务管理工具，帮助你清晰掌握资金状况，避免资金断流
+# 贷款管理系统 v3.0 🚀
 
 ## 📋 项目简介
 
-这是一个基于 Java + Spring Boot + SQLite 的轻量级个人财务管理系统，专为有多笔贷款需要管理的用户设计。
+全新的贷款管理系统，采用现代化技术栈，提供直观、高效的贷款管理体验。
 
-**适用场景**：
-- 同时有多个网贷平台的借款（拍拍贷、招联金融、信用飞、分期乐等）
-- 每月还款日期不同，担心遗漏还款
-- 想知道每月到底要还多少钱
-- 想提前知道会不会出现资金缺口
+### ✨ 核心功能
 
-**核心功能**：
-- 💰 **贷款管理** - 管理多个网贷/信用卡账单，按平台分组查看
-- 📊 **收入支出跟踪** - 记录月度收入和固定支出
-- 💼 **余额管理** - 实时更新当前可用余额，追踪变动历史
-- 🔮 **现金流预测** - 精确到日的预测，提前发现赤字风险
-- 📅 **还款历史** - 记录每笔还款，追踪进度
+- **贷款管理** - 新增、编辑、删除、提前还清
+- **还款计划** - 自动生成、状态跟踪、还款记录
+- **还款日历** - 直观的月历视图，查看每日还款安排
+- **趋势分析** - 可视化负债变化、月还款额、贷款数量趋势
+- **数据统计** - 实时统计剩余负债、月还款、活跃贷款数等
 
-## 🛠 技术栈
+---
 
-- **后端**: Java 21 + Spring Boot 3.x
-- **数据库**: SQLite 3
-- **前端**: HTML5 + Bootstrap 5 + JavaScript
-- **构建**: Maven
+## 🛠️ 技术栈
 
-## 📁 项目结构
+### 后端
+- **Spring Boot 3.2.0** - 核心框架
+- **MyBatis 3.0.3** - 持久层框架
+- **MySQL 8.0** - 数据库
+- **Lombok** - 代码简化
 
-```
-loans/
-├── pom.xml                          # Maven 配置文件
-├── 需求文档.md                       # 详细功能需求文档
-├── README.md                        # 项目说明文档
-└── src/
-    ├── main/
-    │   ├── java/                    # Java 源代码
-    │   │   └── com/finance/loans/
-    │   │       ├── LoansApplication.java      # 启动类
-    │   │       ├── config/                     # 配置类
-    │   │       ├── controller/                 # REST API 控制器
-    │   │       ├── model/                      # 实体类
-    │   │       ├── repository/                 # 数据访问层
-    │   │       ├── service/                    # 业务逻辑层
-    │   │       └── dto/                        # 数据传输对象
-    │   └── resources/
-    │       ├── application.properties          # 应用配置
-    │       ├── schema.sql                      # 数据库表结构
-    │       └── static/                         # 静态资源
-    │           ├── css/                        # 样式文件
-    │           ├── js/                         # JavaScript 文件
-    │           ├── index.html                  # 首页总览
-    │           ├── loans.html                  # 贷款管理页
-    │           ├── income-expenses.html        # 收入支出页
-    │           └── forecast.html               # 月度预测页
-    └── test/                                    # 测试代码
+### 前端
+- **HTML5 + Bootstrap 5** - 界面框架
+- **Chart.js 4.4.0** - 图表库
+- **Bootstrap Icons** - 图标库
+
+---
+
+## 📦 快速开始
+
+### 1. 数据库初始化
+
+```bash
+# 初始化数据库
+mysql -u root -p --default-character-set=utf8mb4 < database-init-v3.0.sql
+
+# 导入贷款数据（如果有）
+mysql -u root -p --default-character-set=utf8mb4 loansv2 < import-data.sql
 ```
 
-## 🚀 快速开始
+### 2. 配置数据库连接
 
-### 前置要求
+编辑 `src/main/resources/application.yml`：
 
-- JDK 17 或更高版本
-- Maven 3.6 或更高版本
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/loansv2?useUnicode=true&characterEncoding=utf8mb4
+    username: loans    # 修改为你的数据库用户名
+    password: loans123 # 修改为你的数据库密码
+```
 
-### 安装步骤
+### 3. 启动应用
 
-1. **克隆项目** (如果从 Git)
+```bash
+# 方式1：使用 Maven
+mvn clean package
+mvn spring-boot:run
+
+# 方式2：使用 IDE
+直接运行 LoansApplication.java
+```
+
+### 4. 访问系统
+
+浏览器打开：**http://localhost:8080**
+
+---
+
+## 📚 API 接口
+
+### 贷款管理
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/loans` | 获取所有贷款 |
+| GET | `/api/loans/{id}` | 获取贷款详情 |
+| POST | `/api/loans` | 新增贷款 |
+| PUT | `/api/loans/{id}` | 更新贷款 |
+| DELETE | `/api/loans/{id}` | 删除贷款 |
+| GET | `/api/loans/summary` | 获取统计摘要 |
+| POST | `/api/loans/{id}/early-settlement` | 提前还清 |
+
+### 还款计划
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/schedules/loan/{loanId}` | 获取贷款的还款计划 |
+| GET | `/api/schedules/current-month` | 获取本月还款计划 |
+| POST | `/api/schedules/{id}/pay` | 记录还款 |
+
+### 负债快照
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/snapshots/latest` | 获取最新快照 |
+| GET | `/api/snapshots/recent/{days}` | 获取最近N天快照 |
+| POST | `/api/snapshots/create` | 手动创建快照 |
+
+---
+
+## 🗄️ 数据库设计
+
+### 核心表结构
+
+#### 1. loan（贷款表）
+- `id` - 主键
+- `name` - 贷款名称
+- `platform` - 贷款平台
+- `principal` - 借款本金
+- `monthly_amount` - 月还款额
+- `total_periods` - 总期数
+- `payment_day` - 每月还款日
+- `start_date` - 首期还款日期
+- `status` - 状态（active/completed）
+
+#### 2. repayment_schedule（还款计划表）
+- `id` - 主键
+- `loan_id` - 贷款ID
+- `period` - 期数
+- `due_date` - 应还日期
+- `amount` - 应还金额
+- `status` - 状态（pending/paid/overdue）
+- `paid_date` - 实还日期
+- `paid_amount` - 实还金额
+
+#### 3. payment_record（还款记录表）
+- `id` - 主键
+- `loan_id` - 贷款ID
+- `schedule_id` - 计划ID
+- `amount` - 还款金额
+- `payment_date` - 还款日期
+- `payment_type` - 还款类型
+
+#### 4. debt_snapshot（负债快照表）
+- `id` - 主键
+- `snapshot_date` - 快照日期
+- `total_debt` - 总负债
+- `total_principal` - 总本金
+- `paid_amount` - 已还金额
+- `remaining_amount` - 剩余金额
+- `active_loans` - 活跃贷款数
+- `monthly_payment` - 月还款额
+
+---
+
+## 🎨 页面说明
+
+### 首页（index.html）
+- 统计卡片展示关键指标
+- 贷款列表卡片，带进度条和操作按钮
+- 新增贷款表单
+- 提前还清和删除确认
+
+### 贷款详情（loan-detail.html）
+- 贷款基本信息展示
+- 还款进度可视化
+- 还款计划列表（按状态筛选）
+- 记录还款功能
+
+### 还款日历（calendar.html）
+- 月份切换
+- 日历网格展示
+- 每日还款计划标记（已还/待还/逾期）
+- 点击日期查看详情
+
+### 负债趋势（trend.html）
+- 时间范围选择（7天/30天/90天）
+- 负债变化趋势图
+- 月还款额趋势图
+- 贷款数量柱状图
+
+---
+
+## ⚙️ 特色功能
+
+### 1. 自动还款计划生成
+新增贷款时自动生成所有期数的还款计划，包括：
+- 自动计算每期还款日期
+- 根据当前日期自动标记历史期数为"已还"
+
+### 2. 智能逾期检测
+定时任务自动检测并更新逾期状态（触发器实现）
+
+### 3. 负债快照
+- 每日自动创建快照（定时任务）
+- 支持手动创建快照
+- 用于趋势分析
+
+### 4. 提前还清
+一键标记所有剩余期数为已还，自动更新贷款状态
+
+---
+
+## 🔧 配置说明
+
+### 数据库配置
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/loansv2
+    username: loans
+    password: loans123
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+```
+
+### 端口配置
+
+```yaml
+server:
+  port: 8080  # 修改为你需要的端口
+```
+
+---
+
+## 📝 使用建议
+
+1. **首次使用**
+   - 先初始化数据库
+   - 导入现有贷款数据（如果有）
+   - 手动创建初始快照
+
+2. **日常维护**
+   - 系统每天自动创建快照
+   - 定期检查逾期状态
+   - 及时记录还款
+
+3. **数据备份**
    ```bash
-   git clone <repository-url>
-   cd loans
+   mysqldump -u root -p loansv2 > backup.sql
    ```
 
-2. **构建项目**
-   ```bash
-   mvn clean install
-   ```
+---
 
-3. **运行应用**
-   ```bash
-   mvn spring-boot:run
-   ```
+## 🐛 问题排查
 
-4. **访问应用**
-   
-   打开浏览器访问：http://localhost:8080
+### 数据库连接失败
+- 检查 MySQL 是否启动
+- 确认用户名密码正确
+- 确认数据库 `loansv2` 已创建
 
-### 首次使用
+### 中文乱码
+- 确保数据库字符集为 `utf8mb4`
+- 确保执行 SQL 时使用 `--default-character-set=utf8mb4`
 
-1. 首先在「余额管理」中设置当前可用余额
-2. 在「收入支出管理」中添加固定收入和支出
-3. 在「贷款管理」中添加你的各个贷款信息
-4. 查看「月度预测」了解未来资金状况
+### 快照数据为空
+- 手动创建快照：POST `/api/snapshots/create`
+- 等待定时任务自动创建（每天凌晨）
 
-## 📊 核心功能
-
-### 1. 首页总览
-- 一目了然查看当前财务状况
-- 显示本月收入、支出、还款汇总
-- 快速更新余额
-
-### 2. 贷款管理
-- 添加多个贷款（拍拍贷、花呗、信用卡等）
-- 记录每笔贷款的总金额、剩余金额、每期还款、还款日
-- 自动计算预计还清日期
-- 支持手动更新还款进度
-
-### 3. 收入支出管理
-- 记录固定收入来源（工资、副业等）
-- 记录固定支出（房租、水电、宽带等）
-- 自动汇总每月收支
-
-### 4. 月度预测
-- 预测未来 3-12 个月现金流
-- 自动识别可能出现赤字的月份
-- 提前预警资金风险
-
-## 🗃️ 数据库设计
-
-### loans（贷款表）
-| 字段 | 类型 | 说明 |
-|-----|------|------|
-| id | INTEGER | 主键 |
-| loan_name | VARCHAR | 贷款名称 |
-| platform | VARCHAR | 贷款平台 |
-| total_amount | DECIMAL | 总借款金额（可选） |
-| remaining_amount | DECIMAL | 剩余未还金额 |
-| monthly_payment | DECIMAL | 每期还款金额 |
-| payment_day | INTEGER | 每月还款日 |
-| total_periods | INTEGER | 总期数（可选） |
-| paid_periods | INTEGER | 已还期数 |
-| status | VARCHAR | 状态 |
-
-### income（收入表）
-| 字段 | 类型 | 说明 |
-|-----|------|------|
-| id | INTEGER | 主键 |
-| income_type | VARCHAR | 收入类型 |
-| amount | DECIMAL | 收入金额 |
-| income_day | INTEGER | 发薪日 |
-
-### expenses_fixed（固定支出表）
-| 字段 | 类型 | 说明 |
-|-----|------|------|
-| id | INTEGER | 主键 |
-| expense_name | VARCHAR | 支出名称 |
-| amount | DECIMAL | 支出金额 |
-| expense_day | INTEGER | 支出日期 |
-
-### balance（余额表）
-| 字段 | 类型 | 说明 |
-|-----|------|------|
-| id | INTEGER | 主键 |
-| current_balance | DECIMAL | 当前余额 |
-
-## 🔌 API 接口
-
-### 贷款相关
-- `GET /api/loans` - 获取所有贷款
-- `POST /api/loans` - 添加贷款
-- `PUT /api/loans/{id}` - 更新贷款
-- `DELETE /api/loans/{id}` - 删除贷款
-- `GET /api/loans/summary` - 获取贷款汇总
-
-### 收入相关
-- `GET /api/income` - 获取所有收入
-- `POST /api/income` - 添加收入
-- `PUT /api/income/{id}` - 更新收入
-- `DELETE /api/income/{id}` - 删除收入
-
-### 支出相关
-- `GET /api/expenses` - 获取所有支出
-- `POST /api/expenses` - 添加支出
-- `PUT /api/expenses/{id}` - 更新支出
-- `DELETE /api/expenses/{id}` - 删除支出
-
-### 其他
-- `GET /api/balance` - 获取当前余额
-- `POST /api/balance` - 更新余额
-- `GET /api/forecast?months=12` - 获取月度预测
-- `GET /api/dashboard` - 获取首页数据
-
-## 📈 预测算法
-
-系统采用简单而有效的预测算法：
-
-```
-初始余额 = 当前余额
-
-for 每个月 in [1..12]:
-    月收入 = sum(所有收入来源)
-    月支出 = sum(所有固定支出)
-    月还款 = sum(所有贷款每期还款)
-    月结余 = 月收入 - 月支出 - 月还款
-    月末余额 = 初始余额 + 月结余
-    
-    if 月末余额 < 0:
-        标记为赤字预警
-    
-    初始余额 = 月末余额
-```
-
-## 🎨 界面预览
-
-- **响应式设计**: 支持电脑、平板、手机访问
-- **现代简洁**: 使用 Bootstrap 5 组件
-- **直观清晰**: 重要数据突出显示
-- **操作便捷**: 一键快速操作
-
-## 🔐 数据安全
-
-- 所有数据存储在本地 SQLite 数据库
-- 无需联网，隐私安全
-- 数据文件位置：`data/loans.db`
-- 建议定期备份数据文件
-
-## 📝 开发计划
-
-### ✅ 已完成（85%）
-- [x] 需求文档编写（已根据真实数据优化）
-- [x] 技术选型确定
-- [x] 数据库设计（5张表）
-- [x] 项目结构规划
-- [x] 真实使用场景设计
-- [x] **后端完整实现**（Model + Repository + Service + Controller）
-- [x] **前端核心页面**（首页 + 贷款管理 + 预测页面）
-- [x] **现金流预测功能**（精确到日的预测算法）
-- [x] **自动还款功能**（自动扣减余额）
-- [x] **响应式UI设计**
-
-### 🚧 进行中
-- [ ] 收入支出管理页面（可选）
-- [ ] 对话式录入功能（可选）
-
-### 📅 可选扩展
-- [ ] 图表可视化
-- [ ] 数据导入导出
-- [ ] 多用户支持
-- [ ] 移动端APP
-
-### 🎯 未来扩展
-- [ ] 图表可视化（Chart.js）
-- [ ] 数据导出（Excel/CSV）
-- [ ] 还款日历视图
-- [ ] 移动端 APP
-- [ ] 多用户支持
-
-## 🤝 贡献指南
-
-欢迎提交 Issue 和 Pull Request！
+---
 
 ## 📄 许可证
 
 MIT License
 
-## 👨‍💻 作者
+---
 
-- 李志强
+## 👨‍💻 开发者
 
-## 📮 联系方式
-
-如有问题或建议，欢迎联系！
+@lizhiqiang
 
 ---
 
-**最后更新**: 2025-10-28
-
+**享受高效的贷款管理体验！** 🎉

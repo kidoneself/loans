@@ -2,7 +2,7 @@
 spring:
   # 数据源配置
   datasource:
-    url: jdbc:mysql://10.10.10.17:3306/loans?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://10.10.10.17:3306/loansv2?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: MyStrongPass123
     driver-class-name: com.mysql.cj.jdbc.Driver

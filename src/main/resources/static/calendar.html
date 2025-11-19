@@ -3,1410 +3,680 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>还款日历 - 贷款管理系统</title>
+    <title>还款日历 - 贷款管理系统 v3.0</title>
+    
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    
     <style>
+        :root {
+            --primary-color: #4f46e5;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+        
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding-bottom: 50px;
+            background-color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-
-        .calendar-container {
-            max-width: 1200px;
-            margin: 15px auto;
-            padding: 15px;
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #6366f1 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 18px 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-            color: white;
-        }
-
-        .month-selector {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .month-selector button {
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s;
-            backdrop-filter: blur(10px);
-        }
-
-        .month-selector button:hover {
-            background: rgba(255,255,255,0.3);
-            border-color: rgba(255,255,255,0.5);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        .month-selector button i {
-            font-size: 14px;
-        }
-
-        .current-month {
-            font-size: 22px;
-            font-weight: bold;
-            color: white;
-            min-width: 160px;
-            text-align: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .month-summary {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-            background: rgba(255,255,255,0.15);
-            padding: 12px 25px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        .month-summary-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .month-summary-label {
-            font-size: 13px;
-            opacity: 0.9;
-        }
-
-        .month-summary-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #FFD54F;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        }
-
-        .month-summary-count {
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-            margin-bottom: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        }
-
-        .calendar-day-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px;
-            text-align: center;
-            font-weight: bold;
-            border-radius: 6px;
-            font-size: 13px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-        .calendar-day {
-            background: white;
-            border: 2px solid #f0f0f0;
-            border-radius: 8px;
-            padding: 8px;
-            min-height: 100px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-        }
-
-        .calendar-day:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
-            transform: translateY(-2px);
-        }
-
-        .calendar-day.other-month {
-            background: #fafafa;
-            opacity: 0.3;
-        }
-
-        .calendar-day.today {
-            border-color: #2196F3;
-            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-            box-shadow: 0 3px 12px rgba(33, 150, 243, 0.25);
-        }
-
-        .calendar-day.has-payment {
-            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
-            border-color: #FF9800;
-        }
-
-        .calendar-day.today.has-payment {
-            background: linear-gradient(135deg, #FFE0B2 0%, #FFCC80 100%);
-            border-color: #F57C00;
-            box-shadow: 0 3px 12px rgba(245, 124, 0, 0.25);
-        }
-
-        .day-number {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-            text-align: right;
-        }
-
-        .payment-item {
-            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-            border-left: 3px solid #FF9800;
-            padding: 5px 8px;
-            margin: 4px 0;
-            border-radius: 4px;
-            font-size: 11px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            transition: all 0.2s;
-        }
-
-        .payment-item:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-            transform: translateX(2px);
-        }
-
-        .payment-amount {
-            color: #F57C00;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        .payment-platform {
-            color: #666;
-            font-size: 10px;
-            margin-bottom: 2px;
-        }
-
-        .upcoming-payments {
-            background: white;
-            padding: 18px;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        }
-
-        .upcoming-payments h3 {
-            margin-bottom: 15px;
-            color: #333;
-            font-size: 17px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .payment-list {
-            display: grid;
-            gap: 10px;
-        }
-
-        .payment-card {
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 12px 15px;
-            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
-            transition: all 0.2s;
-        }
-
-        .payment-card:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-            transform: translateY(-2px);
-        }
-
-        .payment-card.urgent {
-            border-left: 4px solid #f44336;
-            background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
-            box-shadow: 0 3px 10px rgba(244, 67, 54, 0.2);
-        }
-
-        .payment-card.coming-soon {
-            border-left: 4px solid #FF9800;
-            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
-            box-shadow: 0 3px 10px rgba(255, 152, 0, 0.2);
-        }
-
-        .payment-card-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            align-items: center;
-        }
-
-        .payment-date {
-            font-weight: bold;
-            color: #333;
-            font-size: 13px;
-        }
-
-        .days-left {
-            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-            color: white;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            box-shadow: 0 2px 6px rgba(255, 152, 0, 0.3);
-        }
-
-        .payment-card.urgent .days-left {
-            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-            box-shadow: 0 2px 6px rgba(244, 67, 54, 0.3);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
-        .legend {
-            display: flex;
-            gap: 15px;
-            margin: 15px 0;
-            padding: 12px 18px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            transition: all 0.2s;
-            font-size: 13px;
-        }
-
-        .legend-item:hover {
-            background: #e9ecef;
-            transform: translateY(-1px);
-        }
-
-        .legend-color {
-            width: 24px;
-            height: 24px;
-            border-radius: 6px;
-            border: 2px solid #dee2e6;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        }
-
-        .legend-color.today {
-            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-            border-color: #2196F3;
-        }
-
-        .legend-color.payment {
-            background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
-            border-color: #FF9800;
-        }
-
-        /* 右键菜单 */
-        .context-menu {
-            position: fixed;
-            background: white;
+        
+        .calendar-card {
             border: none;
             border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-            padding: 8px 0;
-            z-index: 10000;
-            display: none;
-            min-width: 200px;
-            animation: fadeIn 0.2s ease-out;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .context-menu-item {
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-        }
-
-        .context-menu-item:first-child {
+        
+        .calendar-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #6366f1 100%);
+            color: white;
+            padding: 1.5rem;
             border-radius: 12px 12px 0 0;
         }
-
-        .context-menu-item:last-child {
-            border-radius: 0 0 12px 12px;
+        
+        .calendar-table {
+            width: 100%;
         }
-
-        .context-menu-item:hover {
-            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-            color: #1976D2;
-        }
-
-        .context-menu-item.danger:hover {
-            background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
-            color: #f44336;
-        }
-
-        .payment-item.paid {
-            opacity: 0.7;
-            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%) !important;
-            border-left-color: #4CAF50 !important;
-            text-decoration: line-through;
-        }
-
-        .payment-item.paid::after {
-            content: '✓ 已还';
-            position: absolute;
-            right: 5px;
-            top: 5px;
-            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 8px;
-            font-size: 9px;
+        
+        .calendar-table th {
+            text-align: center;
+            padding: 0.75rem;
             font-weight: 600;
-            box-shadow: 0 1px 4px rgba(76, 175, 80, 0.3);
+            color: #6b7280;
+            border-bottom: 2px solid #e5e7eb;
         }
-
-        .payment-item {
+        
+        .calendar-table td {
+            text-align: center;
+            padding: 0;
+            height: 120px;
+            vertical-align: top;
+            border: 1px solid #e5e7eb;
             position: relative;
+        }
+        
+        .calendar-day {
+            padding: 0.5rem;
+            height: 100%;
             cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
         }
-
-        .payment-item.selected {
-            box-shadow: 0 0 0 3px #2196F3, 0 4px 12px rgba(33, 150, 243, 0.4);
-            transform: scale(1.08);
-            z-index: 10;
-            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%) !important;
+        
+        .calendar-day:hover {
+            background-color: #f0f9ff;
+            transform: scale(1.02);
         }
-
-        .legend-color.paid {
-            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-            border-color: #4CAF50;
+        
+        .calendar-day.other-month {
+            background-color: #f9fafb;
+            color: #d1d5db;
         }
-
-        .selection-toolbar {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 18px 35px;
-            border-radius: 50px;
-            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
-            display: none;
-            z-index: 9999;
-            gap: 20px;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            animation: slideUp 0.3s ease-out;
+        
+        .calendar-day.today {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid var(--primary-color);
         }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        .selection-toolbar.show {
-            display: flex;
-        }
-
-        .selection-toolbar button {
-            padding: 10px 24px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
+        
+        .day-number {
             font-weight: 600;
-            transition: all 0.3s;
-            backdrop-filter: blur(10px);
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
         }
-
-        .selection-toolbar .btn-primary {
-            background: rgba(76, 175, 80, 0.9);
-            color: white;
+        
+        .calendar-day.today .day-number {
+            color: var(--primary-color);
         }
-
-        .selection-toolbar .btn-primary:hover {
-            background: #4CAF50;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        
+        .payment-item {
+            background-color: #fff;
+            border-radius: 4px;
+            padding: 2px 4px;
+            margin-bottom: 2px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-left: 3px solid;
         }
-
-        .selection-toolbar .btn-danger {
-            background: rgba(244, 67, 54, 0.9);
-            color: white;
+        
+        .payment-item.paid {
+            border-left-color: var(--success-color);
+            background-color: #f0fdf4;
+            color: var(--success-color);
         }
-
-        .selection-toolbar .btn-danger:hover {
-            background: #f44336;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+        
+        .payment-item.pending {
+            border-left-color: var(--warning-color);
+            background-color: #fffbeb;
+            color: var(--warning-color);
         }
-
-        .selection-toolbar .btn-secondary {
-            background: rgba(158, 158, 158, 0.9);
-            color: white;
+        
+        .payment-amount {
+            font-weight: 600;
         }
-
-        .selection-toolbar .btn-secondary:hover {
-            background: #9E9E9E;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(158, 158, 158, 0.4);
+        
+        .day-total {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-align: right;
+            max-width: 90%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-
-        .selection-count {
-            font-weight: bold;
-            color: #FFD54F;
-            font-size: 18px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        
+        .has-payment {
+            background: linear-gradient(to bottom, #ffffff 0%, #fef3c7 100%);
+        }
+        
+        .payment-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin: 2px;
+        }
+        
+        .payment-badge.paid {
+            background-color: #d1fae5;
+            color: var(--success-color);
+        }
+        
+        .payment-badge.pending {
+            background-color: #fef3c7;
+            color: var(--warning-color);
+        }
+        
+        .summary-card {
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .payment-list-container {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        
+        .payment-list-item {
+            background: transparent;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0;
+            border-bottom: 1px solid #e5e7eb;
+            transition: all 0.15s;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        
+        .payment-list-item:last-child {
+            border-bottom: none;
+        }
+        
+        .payment-list-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .payment-list-item.paid {
+            border-left: 3px solid var(--success-color);
+            padding-left: 0.6rem;
+        }
+        
+        .payment-list-item.pending {
+            border-left: 3px solid var(--warning-color);
+            padding-left: 0.6rem;
+        }
+        
+        .payment-list-item .badge {
+            font-size: 0.6rem;
+            padding: 0.15rem 0.35rem;
         }
     </style>
 </head>
 <body>
     <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="index.html" style="font-weight: bold; font-size: 20px;">
-                <i class="bi bi-wallet2"></i> 贷款管理系统
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-wallet2 me-2"></i>
+                贷款管理系统 v3.0
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html"><i class="bi bi-house-door"></i> 首页</a>
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house-door me-1"></i>首页
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="loans.html"><i class="bi bi-credit-card"></i> 贷款管理</a>
+                        <a class="nav-link active" href="calendar.html">
+                            <i class="bi bi-calendar3 me-1"></i>日历
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="income-expenses.html"><i class="bi bi-cash-stack"></i> 收入支出</a>
+                        <a class="nav-link" href="trend.html">
+                            <i class="bi bi-graph-up me-1"></i>趋势
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="repayment-plan.html"><i class="bi bi-calendar-check"></i> 还款计划 ⭐</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="forecast.html"><i class="bi bi-graph-up"></i> 固定收支</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="salary-cycle.html"><i class="bi bi-calendar-range"></i> 工资周期</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="calendar.html"><i class="bi bi-calendar3"></i> 还款日历</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="debt-trend.html"><i class="bi bi-graph-down"></i> 债务趋势</a>
+                        <a class="nav-link" href="plan.html">
+                            <i class="bi bi-calendar-check me-1"></i>规划
+                        </a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="calendar-container">
-        <div class="calendar-header">
-            <div class="month-selector">
-                <button onclick="previousMonth()">
-                    <i class="bi bi-chevron-left"></i> 上个月
-                </button>
-                <div class="current-month" id="currentMonth">2025年10月</div>
-                <button onclick="nextMonth()">
-                    下个月 <i class="bi bi-chevron-right"></i>
-                </button>
-                <button onclick="goToday()">
-                    <i class="bi bi-calendar-check"></i> 今天
-                </button>
+    <div class="container">
+        <!-- 操作按钮 -->
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-success btn-sm" onclick="markTodayAsPaid()">
+                <i class="bi bi-check-circle me-2"></i>标记今日已还
+            </button>
+        </div>
+
+        <!-- 月份统计 -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="summary-card bg-warning bg-opacity-10">
+                    <small class="text-muted d-block">本月待还</small>
+                    <h4 class="mb-0 text-warning" id="monthPending">0期</h4>
+                </div>
             </div>
-            <div class="month-summary">
-                <div class="month-summary-item">
-                    <span class="month-summary-label">本月待还:</span>
-                    <span class="month-summary-value">¥<span id="monthRemaining">0.00</span></span>
+            <div class="col-md-4">
+                <div class="summary-card bg-success bg-opacity-10">
+                    <small class="text-muted d-block">本月已还</small>
+                    <h4 class="mb-0 text-success" id="monthPaid">0期</h4>
                 </div>
-                <div style="width: 2px; height: 40px; background: rgba(255,255,255,0.3);"></div>
-                <div class="month-summary-item">
-                    <span class="month-summary-label">本月已还:</span>
-                    <span class="month-summary-count" style="color: #A5D6A7;">¥<span id="monthPaid">0.00</span></span>
-                </div>
-                <div style="width: 2px; height: 40px; background: rgba(255,255,255,0.3);"></div>
-                <div class="month-summary-item">
-                    <span class="month-summary-label">还款笔数:</span>
-                    <span class="month-summary-count"><span id="monthCount">0</span> 笔</span>
+            </div>
+            <div class="col-md-4">
+                <div class="summary-card bg-primary bg-opacity-10">
+                    <small class="text-muted d-block">本月应还金额</small>
+                    <h4 class="mb-0 text-primary" id="monthAmount">¥0</h4>
                 </div>
             </div>
         </div>
 
-        <div class="calendar-grid" id="calendarGrid">
-            <!-- 日历将通过JS动态生成 -->
-        </div>
-
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color today"></div>
-                <span>今天</span>
+        <!-- 日历 -->
+        <div class="card calendar-card">
+            <div class="calendar-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-light btn-sm" onclick="prevMonth()">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <h4 class="mb-0" id="currentMonth">2025年11月</h4>
+                    <button class="btn btn-light btn-sm" onclick="nextMonth()">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
             </div>
-            <div class="legend-item">
-                <div class="legend-color payment"></div>
-                <span>有还款</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color paid"></div>
-                <span>已还款</span>
-            </div>
-        </div>
-
-        <!-- 右键菜单 -->
-        <div id="contextMenu" class="context-menu">
-            <div class="context-menu-item" onclick="markAsPaid()">
-                <i class="bi bi-check-circle-fill" style="color: #4CAF50;"></i>
-                标记为已还款
-            </div>
-            <div class="context-menu-item" onclick="viewLoanDetails()">
-                <i class="bi bi-info-circle-fill" style="color: #2196F3;"></i>
-                查看贷款详情
-            </div>
-            <div class="context-menu-item danger" onclick="cancelPayment()">
-                <i class="bi bi-x-circle-fill"></i>
-                取消标记
+            <div class="card-body p-0">
+                <table class="calendar-table">
+                    <thead>
+                        <tr>
+                            <th>日</th>
+                            <th>一</th>
+                            <th>二</th>
+                            <th>三</th>
+                            <th>四</th>
+                            <th>五</th>
+                            <th>六</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendarBody">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- 多选工具栏 -->
-        <div id="selectionToolbar" class="selection-toolbar">
-            <span>
-                <i class="bi bi-check2-square"></i>
-                已选择 <span class="selection-count" id="selectionCount">0</span> 项
-            </span>
-            <button class="btn-primary" onclick="batchMarkAsPaid()">
-                <i class="bi bi-check-circle"></i> 批量标记已还
-            </button>
-            <button class="btn-danger" onclick="batchCancelMark()">
-                <i class="bi bi-x-circle"></i> 批量取消标记
-            </button>
-            <button class="btn-secondary" onclick="clearSelection()">
-                <i class="bi bi-arrow-counterclockwise"></i> 取消选择
-            </button>
+        <!-- 图例 -->
+        <div class="mt-3 d-flex justify-content-center gap-4">
+            <div class="d-flex align-items-center">
+                <div class="payment-item paid" style="width: 60px; display: inline-block;">已还</div>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="payment-item pending" style="width: 60px; display: inline-block;">待还</div>
+            </div>
         </div>
 
-        <div class="upcoming-payments">
-            <h3>
-                <i class="bi bi-clock-history" style="color: #FF9800;"></i>
-                近期待还款
-                <span style="font-size: 14px; color: #999; font-weight: normal; margin-left: 10px;">
-                    (显示最近10笔)
-                </span>
-            </h3>
-            <div class="payment-list" id="upcomingPayments">
-                <!-- 待还款列表将通过JS动态生成 -->
+        <!-- 当月还款列表 -->
+        <div class="mt-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0 text-muted"><i class="bi bi-list-ul me-2"></i>当月还款明细</h6>
+                <div class="btn-group btn-group-sm" role="group" id="listFilterButtons">
+                    <button type="button" class="btn btn-outline-secondary active" data-filter="all" onclick="filterMonthList('all')">全部</button>
+                    <button type="button" class="btn btn-outline-warning" data-filter="pending" onclick="filterMonthList('pending')">待还</button>
+                    <button type="button" class="btn btn-outline-success" data-filter="paid" onclick="filterMonthList('paid')">已还</button>
+                </div>
+            </div>
+            <div class="payment-list-container" id="monthPaymentList"></div>
+        </div>
+    </div>
+
+    <!-- 日期详情模态框 -->
+    <div class="modal fade" id="dayDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">还款详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- 动态加载 -->
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="js/api.js"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
+        const API_BASE = '/api';
         let currentYear = new Date().getFullYear();
-        let currentMonth = new Date().getMonth(); // 0-11
-        let loans = [];
-        let paidPayments = new Set(); // 存储已还款的记录 "loanId-year-month"
-        let selectedPayment = null; // 当前选中的还款
-        let selectedPayments = new Set(); // 多选的还款项
-        let isMultiSelectMode = false; // 是否处于多选模式
-
-        // 调试信息
-        function showDebugInfo() {
-            const today = new Date();
-            const debugInfo = loans.map(loan => {
-                // 计算第一期还款日期
-                let firstPaymentDate = '';
-                if (loan.startDate && loan.paymentDay) {
-                    const borrowDate = new Date(loan.startDate);
-                    const firstPayment = new Date(borrowDate);
-                    firstPayment.setMonth(borrowDate.getMonth() + 1);
-                    firstPayment.setDate(loan.paymentDay);
-                    firstPaymentDate = firstPayment.toISOString().slice(0, 10);
-                }
-                
-                return `【${loan.loanName}】
-- ID: ${loan.id}
-- 总期数: ${loan.totalPeriods}
-- 已还期数: ${loan.paidPeriods}
-- 剩余期数: ${loan.totalPeriods - loan.paidPeriods}
-- 还款日: ${loan.paymentDay}号
-- 借款日期: ${loan.startDate || '未设置'}
-- 第一期还款: ${firstPaymentDate || '未知'}
-- 状态: ${loan.status}`;
-            }).join('\n\n');
-            
-            alert('=== 贷款数据调试信息 ===\n\n' + debugInfo);
-            console.log('Loans Data:', loans);
-        }
-
-        // 页面加载时初始化
+        let currentMonth = new Date().getMonth() + 1;
+        let allSchedules = [];
+        let loansMap = {};
+        let currentFilter = 'all';
+        
+        // 页面加载
         document.addEventListener('DOMContentLoaded', function() {
-            loadLoans();
-            loadPaidPayments();
-            
-            // 点击其他地方关闭右键菜单
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('#contextMenu')) {
-                    hideContextMenu();
-                }
-                // 点击空白处退出多选模式
-                if (!e.target.closest('.payment-item') && !e.target.closest('.selection-toolbar')) {
-                    if (isMultiSelectMode && e.target.closest('.calendar-grid')) {
-                        clearSelection();
-                    }
-                }
-            });
-
-            // 监听 Ctrl/Cmd 键
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Control' || e.key === 'Meta') {
-                    isMultiSelectMode = true;
-                    document.body.style.cursor = 'pointer';
-                }
-                // ESC 退出多选模式
-                if (e.key === 'Escape') {
-                    clearSelection();
-                    hideContextMenu();
-                }
-            });
-
-            document.addEventListener('keyup', function(e) {
-                if (e.key === 'Control' || e.key === 'Meta') {
-                    if (selectedPayments.size === 0) {
-                        isMultiSelectMode = false;
-                        document.body.style.cursor = 'default';
-                    }
-                }
-            });
+            loadCalendar();
         });
-
-        // 加载贷款数据
-        async function loadLoans() {
+        
+        // 加载日历
+        async function loadCalendar() {
             try {
-                const response = await fetch(`${API_BASE_URL}/loans`);
-                loans = await response.json();
-                renderCalendar();
-                renderUpcomingPayments();
-            } catch (error) {
-                console.error('加载贷款数据失败:', error);
-            }
-        }
-
-        // 加载已还款记录
-        async function loadPaidPayments() {
-            try {
-                // 从localStorage加载（简化版本）
-                const saved = localStorage.getItem('paidPayments');
-                if (saved) {
-                    paidPayments = new Set(JSON.parse(saved));
-                }
-            } catch (error) {
-                console.error('加载已还款记录失败:', error);
-            }
-        }
-
-        // 保存已还款记录
-        function savePaidPayments() {
-            try {
-                localStorage.setItem('paidPayments', JSON.stringify([...paidPayments]));
-            } catch (error) {
-                console.error('保存已还款记录失败:', error);
-            }
-        }
-
-        // 生成还款唯一标识
-        function getPaymentKey(loanId, year, month) {
-            return `${loanId}-${year}-${month}`;
-        }
-
-        // 检查是否已还款（完全基于数据库的已还期数）
-        function isPaid(loanId, year, month) {
-            // 根据贷款的已还期数和还款日自动判断
-            const loan = loans.find(l => l.id === loanId);
-            if (!loan) {
-                return false;
-            }
-            
-            // 如果没有期数信息，无法自动判断
-            if (!loan.totalPeriods || loan.paidPeriods === null || loan.paidPeriods === undefined) {
-                return false;
-            }
-            
-            // 如果已还期数 <= 0，说明还没开始还
-            if (loan.paidPeriods <= 0) {
-                return false;
-            }
-            
-            // 如果没有还款日信息，无法判断
-            if (!loan.paymentDay) {
-                return false;
-            }
-            
-            // 构造该月的还款日期
-            const paymentDate = new Date(year, month - 1, loan.paymentDay);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // 只比较日期，不比较时间
-            paymentDate.setHours(0, 0, 0, 0);
-            
-            // 如果还款日期还没到，肯定没还
-            if (paymentDate > today) {
-                return false;
-            }
-            
-            // 如果还款日期已经过了，根据期数判断
-            // 计算第一期还款月份（借款日期的下一个月）
-            let firstPaymentMonth;
-            if (loan.startDate) {
-                const borrowDate = new Date(loan.startDate);
-                firstPaymentMonth = new Date(borrowDate);
-                firstPaymentMonth.setMonth(borrowDate.getMonth() + 1); // 借款后一个月开始还款
-                firstPaymentMonth.setDate(1); // 设为该月第一天
-            } else {
-                // 推算：从今天往前推已还期数
-                const today = new Date();
-                firstPaymentMonth = new Date(today);
-                firstPaymentMonth.setMonth(today.getMonth() - loan.paidPeriods + 1);
-                firstPaymentMonth.setDate(1);
-            }
-            
-            // 计算该月是第几期（从第一期还款月份算起）
-            const targetMonth = new Date(year, month - 1, 1);
-            const monthsDiff = (targetMonth.getFullYear() - firstPaymentMonth.getFullYear()) * 12 
-                             + (targetMonth.getMonth() - firstPaymentMonth.getMonth());
-            
-            const periodNumber = monthsDiff + 1; // 第几期（从1开始）
-            
-            // 调试日志（已禁用）
-            // console.log(`[isPaid] ${loan.loanName} ${year}-${month}:`, {
-            //     paymentDay: loan.paymentDay,
-            //     paidPeriods: loan.paidPeriods,
-            //     startDate: loan.startDate,
-            //     firstPaymentMonth: firstPaymentMonth.toISOString().slice(0,10),
-            //     targetMonth: targetMonth.toISOString().slice(0,10),
-            //     periodNumber,
-            //     monthsDiff,
-            //     paymentDatePassed: paymentDate <= today,
-            //     shouldBePaid: periodNumber > 0 && periodNumber <= loan.paidPeriods,
-            //     result: periodNumber > 0 && periodNumber <= loan.paidPeriods
-            // });
-            
-            // 如果这期的期数 <= 已还期数，且还款日期已过，说明已经还了
-            return periodNumber > 0 && periodNumber <= loan.paidPeriods;
-        }
-
-        // 渲染日历
-        async function renderCalendar() {
-            const year = currentYear;
-            const month = currentMonth;
-            
-            // 更新月份标题
-            document.getElementById('currentMonth').textContent = 
-                `${year}年${month + 1}月`;
-
-            // 获取当月第一天和最后一天
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const firstDayWeek = firstDay.getDay(); // 0-6
-            const daysInMonth = lastDay.getDate();
-
-            // 获取上个月的天数
-            const prevMonthLastDay = new Date(year, month, 0).getDate();
-
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
-
-            // 添加星期标题
-            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-            weekDays.forEach(day => {
-                const header = document.createElement('div');
-                header.className = 'calendar-day-header';
-                header.textContent = day;
-                grid.appendChild(header);
-            });
-
-            let monthTotal = 0;
-            let paymentCount = 0;
-
-            // 添加上个月的日期（填充）
-            for (let i = firstDayWeek - 1; i >= 0; i--) {
-                const day = document.createElement('div');
-                day.className = 'calendar-day other-month';
-                day.innerHTML = `<div class="day-number">${prevMonthLastDay - i}</div>`;
-                grid.appendChild(day);
-            }
-
-            // 添加当月的日期
-            const today = new Date();
-            for (let date = 1; date <= daysInMonth; date++) {
-                const day = document.createElement('div');
-                day.className = 'calendar-day';
-
-                const currentDate = new Date(year, month, date);
-                const isToday = today.getFullYear() === year && 
-                               today.getMonth() === month && 
-                               today.getDate() === date;
-
-                if (isToday) {
-                    day.classList.add('today');
-                }
-
-                let dayHTML = `<div class="day-number">${date}</div>`;
-
-                // 查找该日期的还款
-                const payments = getPaymentsForDate(date);
-                if (payments.length > 0) {
-                    day.classList.add('has-payment');
-                    payments.forEach(payment => {
-                        const paid = isPaid(payment.loanId, year, month + 1);
-                        const paidClass = paid ? 'paid' : '';
-                        const paymentKey = getPaymentKey(payment.loanId, year, month + 1);
-                        dayHTML += `
-                            <div class="payment-item ${paidClass}" 
-                                 data-payment-key="${paymentKey}"
-                                 data-loan-id="${payment.loanId}"
-                                 data-loan-name="${payment.loanName}"
-                                 data-amount="${payment.amount}"
-                                 data-year="${year}"
-                                 data-month="${month + 1}"
-                                 data-date="${date}"
-                                 onclick="handlePaymentClick(event, this)"
-                                 oncontextmenu="showContextMenu(event, this); return false;">
-                                <div class="payment-platform">${payment.platform}</div>
-                                <div class="payment-amount">¥${payment.amount.toFixed(2)}</div>
-                            </div>
-                        `;
-                        paymentCount++;
-                    });
-                }
-
-                day.innerHTML = dayHTML;
-                grid.appendChild(day);
-            }
-
-            // 从后端获取月度统计
-            try {
-                const summaryResponse = await fetch(`${API_BASE_URL}/calendar/summary?year=${year}&month=${month + 1}`);
-                const summary = await summaryResponse.json();
-                
-                // 计算本月已还和待还（根据本地标记）
-                let monthPaid = 0;
-                let monthRemaining = 0;
-                
-                for (let date = 1; date <= daysInMonth; date++) {
-                    const payments = getPaymentsForDate(date);
-                    payments.forEach(payment => {
-                        const paid = isPaid(payment.loanId, year, month + 1);
-                        if (paid) {
-                            monthPaid += payment.amount;
-                        } else {
-                            monthRemaining += payment.amount;
-                        }
-                    });
-                }
-                
-                // 更新月度统计
-                document.getElementById('monthRemaining').textContent = monthRemaining.toFixed(2);
-                document.getElementById('monthPaid').textContent = monthPaid.toFixed(2);
-                document.getElementById('monthCount').textContent = summary.monthCount || paymentCount;
-            } catch (error) {
-                console.error('获取月度统计失败:', error);
-                // 降级：使用前端计算
-                let monthPaid = 0;
-                let monthRemaining = 0;
-                
-                for (let date = 1; date <= daysInMonth; date++) {
-                    const payments = getPaymentsForDate(date);
-                    payments.forEach(payment => {
-                        const paid = isPaid(payment.loanId, year, month + 1);
-                        if (paid) {
-                            monthPaid += payment.amount;
-                        } else {
-                            monthRemaining += payment.amount;
-                        }
-                    });
-                }
-                
-                document.getElementById('monthRemaining').textContent = monthRemaining.toFixed(2);
-                document.getElementById('monthPaid').textContent = monthPaid.toFixed(2);
-                document.getElementById('monthCount').textContent = paymentCount;
-            }
-
-            // 添加下个月的日期（填充）
-            const remainingDays = 42 - (firstDayWeek + daysInMonth); // 6行×7列=42
-            for (let i = 1; i <= remainingDays; i++) {
-                const day = document.createElement('div');
-                day.className = 'calendar-day other-month';
-                day.innerHTML = `<div class="day-number">${i}</div>`;
-                grid.appendChild(day);
-            }
-        }
-
-        // 判断贷款在某月是否还在还款
-        function isLoanActiveInMonth(loan, year, month) {
-            // 如果没有期数信息，只显示前后1个月
-            if (!loan.totalPeriods || loan.paidPeriods === null || loan.paidPeriods === undefined) {
-                const today = new Date();
-                const targetMonth = new Date(year, month - 1, 1);
-                const minMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                const maxMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1);
-                return targetMonth >= minMonth && targetMonth < maxMonth;
-            }
-            
-            const remainingPeriods = loan.totalPeriods - loan.paidPeriods;
-            if (remainingPeriods <= 0) {
-                return false;  // 已经还完
-            }
-            
-            const today = new Date();
-            const targetMonthDate = new Date(year, month - 1, 1);
-            
-            // 计算开始还款月份
-            let startPaymentMonth;
-            if (loan.startDate) {
-                startPaymentMonth = new Date(loan.startDate);
-                startPaymentMonth.setDate(1);
-            } else {
-                // 推算：从今天往前推已还期数
-                startPaymentMonth = new Date(today);
-                startPaymentMonth.setMonth(startPaymentMonth.getMonth() - loan.paidPeriods);
-                startPaymentMonth.setDate(1);
-            }
-            
-            // 计算最后还款月份
-            const endPaymentMonth = new Date(today);
-            endPaymentMonth.setMonth(endPaymentMonth.getMonth() + remainingPeriods);
-            endPaymentMonth.setDate(1);
-            
-            // 目标月份必须在开始和结束之间
-            return targetMonthDate >= startPaymentMonth && targetMonthDate < endPaymentMonth;
-        }
-
-        // 获取指定日期的还款
-        function getPaymentsForDate(date) {
-            const year = currentYear;
-            const month = currentMonth + 1;  // currentMonth是0-11，需要+1
-            
-            return loans
-                .filter(loan => {
-                    // 检查状态和日期
-                    if (loan.status !== 'active' || loan.paymentDay !== date) {
-                        return false;
-                    }
-                    // 检查这笔贷款在当前月份是否还在还款
-                    return isLoanActiveInMonth(loan, year, month);
-                })
-                .map(loan => ({
-                    loanId: loan.id,
-                    loanName: loan.loanName,
-                    platform: loan.platform,
-                    amount: loan.monthlyPayment
-                }));
-        }
-
-        // 处理还款项点击
-        function handlePaymentClick(event, element) {
-            event.stopPropagation();
-            
-            const paymentKey = element.dataset.paymentKey;
-            
-            // Ctrl/Cmd + 点击 = 多选
-            if (event.ctrlKey || event.metaKey || isMultiSelectMode) {
-                isMultiSelectMode = true;
-                
-                if (selectedPayments.has(paymentKey)) {
-                    selectedPayments.delete(paymentKey);
-                    element.classList.remove('selected');
-                } else {
-                    selectedPayments.add(paymentKey);
-                    element.classList.add('selected');
-                }
-                
-                updateSelectionToolbar();
-            } else {
-                // 普通点击 - 显示该项信息（可扩展）
-                // 暂时不做处理
-            }
-        }
-
-        // 显示右键菜单
-        function showContextMenu(event, element) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            // 如果有多选，右键应用于所有选中项
-            if (selectedPayments.size > 0) {
-                // 多选模式下的右键
-                selectedPayment = null;
-            } else {
-                // 单选模式
-                selectedPayment = {
-                    element: element,
-                    loanId: element.dataset.loanId,
-                    loanName: element.dataset.loanName,
-                    amount: parseFloat(element.dataset.amount),
-                    year: parseInt(element.dataset.year),
-                    month: parseInt(element.dataset.month),
-                    date: parseInt(element.dataset.date)
-                };
-            }
-
-            const menu = document.getElementById('contextMenu');
-            
-            // 使用 pageX/Y 直接定位（包含滚动偏移）
-            let x = event.pageX;
-            let y = event.pageY;
-            
-            // 确保菜单不会超出视窗
-            const menuWidth = 200;
-            const menuHeight = 120;
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight + window.pageYOffset;
-            
-            if (x + menuWidth > windowWidth) {
-                x = windowWidth - menuWidth - 10;
-            }
-            if (y + menuHeight > windowHeight) {
-                y = y - menuHeight;
-            }
-            
-            menu.style.left = x + 'px';
-            menu.style.top = y + 'px';
-            menu.style.display = 'block';
-
-            return false;
-        }
-
-        // 更新选择工具栏
-        function updateSelectionToolbar() {
-            const toolbar = document.getElementById('selectionToolbar');
-            const count = document.getElementById('selectionCount');
-            
-            count.textContent = selectedPayments.size;
-            
-            if (selectedPayments.size > 0) {
-                toolbar.classList.add('show');
-            } else {
-                toolbar.classList.remove('show');
-                isMultiSelectMode = false;
-                document.body.style.cursor = 'default';
-            }
-        }
-
-        // 清除选择
-        function clearSelection() {
-            selectedPayments.clear();
-            document.querySelectorAll('.payment-item.selected').forEach(el => {
-                el.classList.remove('selected');
-            });
-            updateSelectionToolbar();
-        }
-
-        // 隐藏右键菜单
-        function hideContextMenu() {
-            document.getElementById('contextMenu').style.display = 'none';
-        }
-
-        // 标记为已还款
-        async function markAsPaid() {
-            hideContextMenu();
-            
-            if (!selectedPayment) return;
-
-            const confirmed = confirm(
-                `确认标记为已还款？\n\n` +
-                `贷款：${selectedPayment.loanName}\n` +
-                `金额：¥${selectedPayment.amount.toFixed(2)}\n` +
-                `日期：${selectedPayment.year}-${selectedPayment.month}-${selectedPayment.date}`
-            );
-
-            if (!confirmed) return;
-
-            try {
-                // 记录还款
-                const paymentData = {
-                    loanId: selectedPayment.loanId,
-                    paymentAmount: selectedPayment.amount,
-                    paymentDate: `${selectedPayment.year}-${String(selectedPayment.month).padStart(2, '0')}-${String(selectedPayment.date).padStart(2, '0')}`,
-                    autoDeductBalance: true,
-                    note: '日历标记还款'
-                };
-
-                const response = await fetch(`${API_BASE_URL}/loans/${selectedPayment.loanId}/payment`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(paymentData)
+                // 加载所有贷款信息
+                const loansResponse = await fetch(`${API_BASE}/loans`);
+                const loans = await loansResponse.json();
+                loans.forEach(loan => {
+                    loansMap[loan.id] = loan;
                 });
-
-                if (response.ok) {
-                    // 标记为已还款
-                    const key = getPaymentKey(selectedPayment.loanId, selectedPayment.year, selectedPayment.month);
-                    paidPayments.add(key);
-                    savePaidPayments();
-
-                    // 更新显示
-                    selectedPayment.element.classList.add('paid');
-                    
-                    alert('✓ 已标记为还款成功！');
-                    
-                    // 重新加载数据
-                    await loadLoans();
-                } else {
-                    throw new Error('记录还款失败');
-                }
-            } catch (error) {
-                console.error('标记还款失败:', error);
-                alert('❌ 标记失败：' + error.message);
-            }
-        }
-
-        // 查看贷款详情
-        function viewLoanDetails() {
-            hideContextMenu();
-            if (selectedPayment) {
-                window.location.href = `loan-detail.html?id=${selectedPayment.loanId}`;
-            }
-        }
-
-        // 取消标记
-        function cancelPayment() {
-            hideContextMenu();
-            
-            if (!selectedPayment) return;
-
-            const key = getPaymentKey(selectedPayment.loanId, selectedPayment.year, selectedPayment.month);
-            
-            if (!paidPayments.has(key)) {
-                alert('该还款尚未标记为已还款');
-                return;
-            }
-
-            const confirmed = confirm('确认取消已还款标记？\n\n注意：这只会取消本地标记，不会删除后端还款记录。');
-            
-            if (confirmed) {
-                paidPayments.delete(key);
-                savePaidPayments();
-                selectedPayment.element.classList.remove('paid');
+                
+                // 加载还款计划
+                const response = await fetch(`${API_BASE}/schedules/month/${currentYear}/${currentMonth}`);
+                allSchedules = await response.json();
+                
+                // 更新月份显示
+                document.getElementById('currentMonth').textContent = 
+                    `${currentYear}年${currentMonth}月`;
+                
+                // 更新统计
+                updateSummary();
+                
+                // 渲染日历
                 renderCalendar();
-                alert('✓ 已取消标记');
-            }
-        }
-
-        // 批量标记为已还款
-        async function batchMarkAsPaid() {
-            if (selectedPayments.size === 0) return;
-
-            const confirmed = confirm(`确认标记 ${selectedPayments.size} 笔还款为已还？`);
-            if (!confirmed) return;
-
-            let successCount = 0;
-            let failCount = 0;
-
-            for (const paymentKey of selectedPayments) {
-                try {
-                    const element = document.querySelector(`[data-payment-key="${paymentKey}"]`);
-                    if (!element) continue;
-
-                    const paymentData = {
-                        loanId: element.dataset.loanId,
-                        paymentAmount: parseFloat(element.dataset.amount),
-                        paymentDate: `${element.dataset.year}-${String(element.dataset.month).padStart(2, '0')}-${String(element.dataset.date).padStart(2, '0')}`,
-                        autoDeductBalance: true,
-                        note: '批量标记还款'
-                    };
-
-                    const response = await fetch(`${API_BASE_URL}/loans/${element.dataset.loanId}/payment`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(paymentData)
-                    });
-
-                    if (response.ok) {
-                        paidPayments.add(paymentKey);
-                        successCount++;
-                    } else {
-                        failCount++;
-                    }
-                } catch (error) {
-                    console.error('标记失败:', error);
-                    failCount++;
-                }
-            }
-
-            savePaidPayments();
-            clearSelection();
-            await loadLoans();
-            
-            alert(`✓ 批量标记完成！\n成功：${successCount} 笔\n失败：${failCount} 笔`);
-        }
-
-        // 批量取消标记
-        function batchCancelMark() {
-            if (selectedPayments.size === 0) return;
-
-            const confirmed = confirm(`确认取消 ${selectedPayments.size} 笔已还款标记？\n\n注意：这只会取消本地标记，不会删除后端还款记录。`);
-            if (!confirmed) return;
-
-            let count = 0;
-            for (const paymentKey of selectedPayments) {
-                if (paidPayments.has(paymentKey)) {
-                    paidPayments.delete(paymentKey);
-                    count++;
-                }
-            }
-
-            savePaidPayments();
-            clearSelection();
-            renderCalendar();
-            
-            alert(`✓ 已取消 ${count} 笔标记`);
-        }
-
-        // 渲染近期待还款
-        function renderUpcomingPayments() {
-            const today = new Date();
-            const upcomingList = [];
-
-            // 收集未来30天的还款
-            loans.filter(loan => loan.status === 'active').forEach(loan => {
-                // 计算剩余期数
-                const remaining = loan.totalPeriods - loan.paidPeriods;
                 
-                for (let i = 0; i < Math.min(remaining, 3); i++) {
-                    const paymentDate = new Date(today);
-                    paymentDate.setMonth(paymentDate.getMonth() + i);
-                    paymentDate.setDate(loan.paymentDay);
-
-                    const daysLeft = Math.ceil((paymentDate - today) / (1000 * 60 * 60 * 24));
+                // 渲染列表
+                renderMonthList();
+            } catch (error) {
+                console.error('加载日历失败:', error);
+            }
+        }
+        
+        // 更新统计
+        function updateSummary() {
+            const pending = allSchedules.filter(s => s.status === 'pending').length;
+            const paid = allSchedules.filter(s => s.status === 'paid').length;
+            const amount = allSchedules
+                .filter(s => s.status === 'pending')
+                .reduce((sum, s) => sum + s.amount, 0);
+            
+            document.getElementById('monthPending').textContent = pending + '期';
+            document.getElementById('monthPaid').textContent = paid + '期';
+            document.getElementById('monthAmount').textContent = 
+                '¥' + amount.toLocaleString('zh-CN', {minimumFractionDigits: 2});
+        }
+        
+        // 渲染日历
+        function renderCalendar() {
+            const firstDay = new Date(currentYear, currentMonth - 1, 1);
+            const lastDay = new Date(currentYear, currentMonth, 0);
+            const daysInMonth = lastDay.getDate();
+            const startWeekday = firstDay.getDay();
+            
+            const tbody = document.getElementById('calendarBody');
+            tbody.innerHTML = '';
+            
+            let day = 1;
+            let nextMonthDay = 1;
+            
+            // 计算需要多少行
+            const totalDays = startWeekday + daysInMonth;
+            const rows = Math.ceil(totalDays / 7);
+            
+            for (let i = 0; i < rows; i++) {
+                const row = document.createElement('tr');
+                
+                for (let j = 0; j < 7; j++) {
+                    const cell = document.createElement('td');
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'calendar-day';
                     
-                    if (daysLeft >= 0) {
-                        upcomingList.push({
-                            date: paymentDate,
-                            daysLeft: daysLeft,
-                            loanName: loan.loanName,
-                            platform: loan.platform,
-                            amount: loan.monthlyPayment,
-                            periodNumber: loan.paidPeriods + i + 1,
-                            totalPeriods: loan.totalPeriods
-                        });
+                    if (i === 0 && j < startWeekday) {
+                        // 上个月的日期
+                        const prevMonthLastDay = new Date(currentYear, currentMonth - 1, 0).getDate();
+                        const prevDay = prevMonthLastDay - startWeekday + j + 1;
+                        dayDiv.classList.add('other-month');
+                        dayDiv.innerHTML = `<div class="day-number">${prevDay}</div>`;
+                    } else if (day > daysInMonth) {
+                        // 下个月的日期
+                        dayDiv.classList.add('other-month');
+                        dayDiv.innerHTML = `<div class="day-number">${nextMonthDay}</div>`;
+                        nextMonthDay++;
+                    } else {
+                        // 当月日期
+                        const currentDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const today = new Date().toISOString().split('T')[0];
+                        
+                        if (currentDate === today) {
+                            dayDiv.classList.add('today');
+                        }
+                        
+                        // 查找这天的还款计划
+                        const daySchedules = allSchedules.filter(s => s.dueDate === currentDate);
+                        
+                        let content = `<div class="day-number">${day}</div>`;
+                        
+                        if (daySchedules.length > 0) {
+                            // 有待还的添加背景样式
+                            const hasPending = daySchedules.some(s => s.status === 'pending');
+                            if (hasPending) {
+                                dayDiv.classList.add('has-payment');
+                            }
+                            
+                            // 显示前3条还款项（显示平台名称）
+                            const displaySchedules = daySchedules.slice(0, 3);
+                            const items = displaySchedules.map(s => {
+                                const loan = loansMap[s.loanId];
+                                const platform = loan ? loan.platform : '未知';
+                                const amount = (s.amount / 1000).toFixed(1) + 'K';
+                                return `<div class="payment-item ${s.status}" title="${platform} - 第${s.period}期 - ¥${s.amount.toLocaleString('zh-CN')}">
+                                    <span class="payment-amount">${platform}</span>
+                                </div>`;
+                            }).join('');
+                            content += items;
+                            
+                            // 如果还有更多，显示数量
+                            if (daySchedules.length > 3) {
+                                content += `<div class="text-muted" style="font-size: 0.65rem; margin-top: 2px;">
+                                    +${daySchedules.length - 3}笔
+                                </div>`;
+                            }
+                            
+                            // 显示当天总额和数量
+                            const totalAmount = daySchedules.reduce((sum, s) => sum + s.amount, 0);
+                            const amountK = (totalAmount / 1000).toFixed(1);
+                            content += `<div class="day-total" title="${daySchedules.length}笔 共¥${totalAmount.toLocaleString('zh-CN')}">¥${amountK}K</div>`;
+                            
+                            // 添加点击事件
+                            dayDiv.onclick = () => showDayDetail(currentDate, daySchedules);
+                            dayDiv.style.cursor = 'pointer';
+                        }
+                        
+                        dayDiv.innerHTML = content;
+                        day++;
                     }
+                    
+                    cell.appendChild(dayDiv);
+                    row.appendChild(cell);
                 }
-            });
-
-            // 排序
-            upcomingList.sort((a, b) => a.date - b.date);
-
-            // 只显示最近的10笔
-            const listContainer = document.getElementById('upcomingPayments');
-            listContainer.innerHTML = upcomingList.slice(0, 10).map(payment => {
-                const urgentClass = payment.daysLeft <= 3 ? 'urgent' : 
-                                   payment.daysLeft <= 7 ? 'coming-soon' : '';
                 
-                return `
-                    <div class="payment-card ${urgentClass}">
-                        <div class="payment-card-header">
-                            <div class="payment-date">
-                                ${payment.date.getFullYear()}-${String(payment.date.getMonth() + 1).padStart(2, '0')}-${String(payment.date.getDate()).padStart(2, '0')}
+                tbody.appendChild(row);
+            }
+        }
+        
+        // 显示日期详情
+        function showDayDetail(date, schedules) {
+            document.getElementById('modalTitle').textContent = date + ' 还款详情';
+            
+            let html = '';
+            let totalAmount = 0;
+            
+            schedules.forEach(schedule => {
+                const loan = loansMap[schedule.loanId];
+                const statusText = {
+                    'paid': '已还',
+                    'pending': '待还'
+                }[schedule.status] || schedule.status;
+                
+                const statusClass = schedule.status;
+                totalAmount += schedule.amount;
+                
+                html += `
+                    <div class="card mb-2">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="payment-badge ${statusClass}">${statusText}</span>
+                                    <strong class="ms-2">${loan ? loan.name : '未知贷款'}</strong>
+                                </div>
+                                <strong class="text-${statusClass}">
+                                    ¥${schedule.amount.toLocaleString('zh-CN', {minimumFractionDigits: 2})}
+                                </strong>
                             </div>
-                            <div class="days-left">
-                                ${payment.daysLeft === 0 ? '今天' : `${payment.daysLeft}天后`}
-                            </div>
-                        </div>
-                        <div style="margin-bottom: 5px;">
-                            <strong>${payment.loanName}</strong> - ${payment.platform}
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>第${payment.periodNumber}期 / 共${payment.totalPeriods}期</div>
-                            <div style="font-size: 20px; color: #F57C00; font-weight: bold;">
-                                ¥${payment.amount.toFixed(2)}
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">
+                                    ${loan ? loan.platform : ''} - 第${schedule.period}期
+                                </small>
+                                ${schedule.paidDate ? `
+                                    <small class="text-muted">实还: ${schedule.paidDate}</small>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
                 `;
-            }).join('');
+            });
+            
+            // 添加汇总
+            html += `
+                <div class="card bg-light mt-3">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>当日合计</strong>
+                            <strong class="text-primary">
+                                ${schedules.length}笔 共¥${totalAmount.toLocaleString('zh-CN', {minimumFractionDigits: 2})}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalBody').innerHTML = html;
+            
+            const modal = new bootstrap.Modal(document.getElementById('dayDetailModal'));
+            modal.show();
         }
-
-        // 上个月
-        function previousMonth() {
+        
+        // 上一月
+        async function prevMonth() {
             currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
+            if (currentMonth < 1) {
+                currentMonth = 12;
                 currentYear--;
             }
-            renderCalendar();
+            await fetchMonthSchedules();
         }
-
-        // 下个月
-        function nextMonth() {
+        
+        // 下一月
+        async function nextMonth() {
             currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
+            if (currentMonth > 12) {
+                currentMonth = 1;
                 currentYear++;
             }
-            renderCalendar();
+            await fetchMonthSchedules();
         }
-
-        // 回到今天
-        function goToday() {
-            const today = new Date();
-            currentYear = today.getFullYear();
-            currentMonth = today.getMonth();
-            renderCalendar();
+        
+        // 获取指定月份的还款计划
+        async function fetchMonthSchedules() {
+            // 直接调用 loadCalendar，已经使用了新接口
+            await loadCalendar();
+        }
+        
+        // 一键标记当天已还
+        async function markTodayAsPaid() {
+            if (!confirm('确认标记今天应还的款项为已还？')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/schedules/mark-today-paid`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(`成功标记 ${result.count} 笔还款为已还`);
+                    // 刷新日历
+                    await loadCalendar();
+                } else {
+                    alert('操作失败：' + result.error);
+                }
+            } catch (error) {
+                console.error('标记失败:', error);
+                alert('操作失败');
+            }
+        }
+        
+        // 筛选月度列表
+        function filterMonthList(filter) {
+            currentFilter = filter;
+            
+            // 更新按钮状态
+            document.querySelectorAll('#listFilterButtons button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === filter) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // 重新渲染
+            renderMonthList();
+        }
+        
+        // 渲染月度列表
+        function renderMonthList() {
+            let schedules = allSchedules;
+            
+            // 根据筛选条件过滤
+            if (currentFilter === 'pending') {
+                schedules = schedules.filter(s => s.status === 'pending');
+            } else if (currentFilter === 'paid') {
+                schedules = schedules.filter(s => s.status === 'paid');
+            }
+            
+            // 按日期排序
+            schedules.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            
+            const container = document.getElementById('monthPaymentList');
+            
+            if (schedules.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted py-4">暂无数据</p>';
+                return;
+            }
+            
+            let html = '';
+            schedules.forEach(schedule => {
+                const loan = loansMap[schedule.loanId];
+                const statusText = schedule.status === 'paid' ? '已还' : '待还';
+                const statusColor = schedule.status === 'paid' ? 'success' : 'warning';
+                
+                const dateStr = schedule.dueDate.substring(5); // 只显示月-日
+                html += `
+                    <div class="payment-list-item ${schedule.status}">
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <span class="badge bg-${statusColor}">${statusText}</span>
+                            <strong style="min-width: 80px;">${loan ? loan.name : '未知'}</strong>
+                            <span class="text-muted">${dateStr}</span>
+                            <span class="text-muted">第${schedule.period}期</span>
+                            ${schedule.paidDate ? `<i class="bi bi-check-circle-fill text-success" style="font-size: 0.7rem;"></i>` : ''}
+                            <span class="ms-auto text-${statusColor} fw-bold">¥${schedule.amount.toLocaleString('zh-CN', {minimumFractionDigits: 2})}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-

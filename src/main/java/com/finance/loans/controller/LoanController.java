@@ -1,27 +1,25 @@
 package com.finance.loans.controller;
 
 import com.finance.loans.model.Loan;
-import com.finance.loans.model.PaymentHistory;
 import com.finance.loans.service.LoanService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 贷款 REST API 控制器
+ * 贷款控制器
  */
 @RestController
 @RequestMapping("/api/loans")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class LoanController {
-
-    private final LoanService loanService;
-
+    
+    @Autowired
+    private LoanService loanService;
+    
     /**
      * 获取所有贷款
      */
@@ -29,7 +27,7 @@ public class LoanController {
     public ResponseEntity<List<Loan>> getAllLoans() {
         return ResponseEntity.ok(loanService.getAllLoans());
     }
-
+    
     /**
      * 获取活跃贷款
      */
@@ -37,113 +35,82 @@ public class LoanController {
     public ResponseEntity<List<Loan>> getActiveLoans() {
         return ResponseEntity.ok(loanService.getActiveLoans());
     }
-
+    
     /**
-     * 按平台分组获取贷款
-     */
-    @GetMapping("/by-platform")
-    public ResponseEntity<Map<String, List<Loan>>> getLoansByPlatform() {
-        return ResponseEntity.ok(loanService.getLoansByPlatform());
-    }
-
-    /**
-     * 获取单个贷款
+     * 根据ID获取贷款
      */
     @GetMapping("/{id}")
     public ResponseEntity<Loan> getLoanById(@PathVariable Long id) {
-        return ResponseEntity.ok(loanService.getLoanById(id));
+        Loan loan = loanService.getLoanById(id);
+        if (loan == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(loan);
     }
-
+    
     /**
      * 添加贷款
      */
     @PostMapping
     public ResponseEntity<Loan> addLoan(@RequestBody Loan loan) {
-        return ResponseEntity.ok(loanService.addLoan(loan));
+        try {
+            Loan created = loanService.addLoan(loan);
+            return ResponseEntity.ok(created);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
-
+    
     /**
      * 更新贷款
      */
     @PutMapping("/{id}")
     public ResponseEntity<Loan> updateLoan(@PathVariable Long id, @RequestBody Loan loan) {
-        return ResponseEntity.ok(loanService.updateLoan(id, loan));
+        try {
+            Loan updated = loanService.updateLoan(id, loan);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
-
+    
     /**
      * 删除贷款
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLoan(@PathVariable Long id) {
-        loanService.deleteLoan(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Map<String, String>> deleteLoan(@PathVariable Long id) {
+        try {
+            loanService.deleteLoan(id);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "删除成功");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
-
+    
     /**
-     * 记录还款
+     * 提前还清
      */
-    @PostMapping("/{id}/payment")
-    public ResponseEntity<PaymentHistory> recordPayment(
-            @PathVariable Long id,
-            @RequestBody Map<String, Object> paymentData) {
-        
-        // 支持多种参数名称
-        BigDecimal amount = paymentData.containsKey("paymentAmount") 
-            ? new BigDecimal(paymentData.get("paymentAmount").toString())
-            : new BigDecimal(paymentData.get("amount").toString());
-            
-        LocalDate paymentDate = LocalDate.parse(paymentData.get("paymentDate").toString());
-        
-        boolean autoDeduct = paymentData.containsKey("autoDeductBalance")
-            ? Boolean.parseBoolean(paymentData.get("autoDeductBalance").toString())
-            : (paymentData.containsKey("autoDeduct") 
-                ? Boolean.parseBoolean(paymentData.get("autoDeduct").toString()) 
-                : true);
-        
-        String note = paymentData.get("note") != null ? paymentData.get("note").toString() : null;
-        
-        PaymentHistory payment = loanService.recordPayment(id, amount, paymentDate, autoDeduct, note);
-        return ResponseEntity.ok(payment);
+    @PostMapping("/{id}/early-settlement")
+    public ResponseEntity<Map<String, String>> markAsEarlySettlement(@PathVariable Long id) {
+        try {
+            loanService.markAsEarlySettlement(id);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "提前还清成功");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
     }
-
+    
     /**
-     * 获取贷款的还款历史
-     */
-    @GetMapping("/{id}/payment-history")
-    public ResponseEntity<List<PaymentHistory>> getPaymentHistory(@PathVariable Long id) {
-        return ResponseEntity.ok(loanService.getPaymentHistory(id));
-    }
-
-    /**
-     * 获取贷款汇总信息
+     * 获取贷款统计
      */
     @GetMapping("/summary")
     public ResponseEntity<Map<String, Object>> getLoanSummary() {
         return ResponseEntity.ok(loanService.getLoanSummary());
     }
-
-    /**
-     * 获取平台汇总
-     */
-    @GetMapping("/platform-summary")
-    public ResponseEntity<List<Map<String, Object>>> getPlatformSummary() {
-        return ResponseEntity.ok(loanService.getPlatformSummary());
-    }
-
-    /**
-     * 获取贷款详情（含计算信息）
-     */
-    @GetMapping("/{id}/detail")
-    public ResponseEntity<Map<String, Object>> getLoanDetail(@PathVariable Long id) {
-        return ResponseEntity.ok(loanService.getLoanDetail(id));
-    }
-
-    /**
-     * 获取还款计划
-     */
-    @GetMapping("/repayment-plan")
-    public ResponseEntity<Map<String, Object>> getRepaymentPlan() {
-        return ResponseEntity.ok(loanService.getRepaymentPlan());
-    }
 }
-

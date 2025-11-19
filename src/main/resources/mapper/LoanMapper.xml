@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finance.loans.mapper.LoanMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="LoanResultMap" type="com.finance.loans.model.Loan">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="platform" column="platform"/>
+        <result property="principal" column="principal"/>
+        <result property="monthlyAmount" column="monthly_amount"/>
+        <result property="totalPeriods" column="total_periods"/>
+        <result property="paymentDay" column="payment_day"/>
+        <result property="startDate" column="start_date"/>
+        <result property="status" column="status"/>
+        <result property="note" column="note"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 查询所有贷款 -->
+    <select id="findAll" resultMap="LoanResultMap">
+        SELECT * FROM loan ORDER BY created_at DESC
+    </select>
+
+    <!-- 根据状态查询贷款 -->
+    <select id="findByStatus" resultMap="LoanResultMap">
+        SELECT * FROM loan WHERE status = #{status} ORDER BY created_at DESC
+    </select>
+
+    <!-- 根据ID查询贷款 -->
+    <select id="findById" resultMap="LoanResultMap">
+        SELECT * FROM loan WHERE id = #{id}
+    </select>
+
+    <!-- 插入贷款 -->
+    <insert id="insert" parameterType="com.finance.loans.model.Loan" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO loan (
+            name, platform, principal, monthly_amount, total_periods, 
+            payment_day, start_date, status, note
+        ) VALUES (
+            #{name}, #{platform}, #{principal}, #{monthlyAmount}, #{totalPeriods},
+            #{paymentDay}, #{startDate}, #{status}, #{note}
+        )
+    </insert>
+
+    <!-- 更新贷款 -->
+    <update id="update" parameterType="com.finance.loans.model.Loan">
+        UPDATE loan SET
+            name = #{name},
+            platform = #{platform},
+            principal = #{principal},
+            monthly_amount = #{monthlyAmount},
+            total_periods = #{totalPeriods},
+            payment_day = #{paymentDay},
+            start_date = #{startDate},
+            status = #{status},
+            note = #{note}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除贷款 -->
+    <delete id="deleteById">
+        DELETE FROM loan WHERE id = #{id}
+    </delete>
+
+    <!-- 统计贷款数量 -->
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*) FROM loan WHERE status = #{status}
+    </select>
+
+</mapper>

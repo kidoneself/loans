@@ -1,7 +1,9 @@
 package com.finance.loans.mapper;
 
 import com.finance.loans.model.Loan;
-import org.apache.ibatis.annotations.*;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
 import java.util.List;
 
 /**
@@ -9,33 +11,39 @@ import java.util.List;
  */
 @Mapper
 public interface LoanMapper {
-
-    @Select("SELECT * FROM loans WHERE id = #{id}")
-    Loan findById(Long id);
-
-    @Select("SELECT * FROM loans")
+    
+    /**
+     * 查询所有贷款
+     */
     List<Loan> findAll();
-
-    @Select("SELECT * FROM loans WHERE status = #{status}")
-    List<Loan> findByStatus(String status);
-
-    @Insert("INSERT INTO loans (loan_name, platform, total_amount, remaining_amount, monthly_payment, " +
-            "payment_day, total_periods, paid_periods, start_date, status, note, created_at, updated_at) " +
-            "VALUES (#{loanName}, #{platform}, #{totalAmount}, #{remainingAmount}, #{monthlyPayment}, " +
-            "#{paymentDay}, #{totalPeriods}, #{paidPeriods}, #{startDate}, #{status}, #{note}, NOW(), NOW())")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
+    
+    /**
+     * 根据状态查询贷款
+     */
+    List<Loan> findByStatus(@Param("status") String status);
+    
+    /**
+     * 根据ID查询贷款
+     */
+    Loan findById(@Param("id") Long id);
+    
+    /**
+     * 插入贷款
+     */
     int insert(Loan loan);
-
-    @Update("UPDATE loans SET loan_name=#{loanName}, platform=#{platform}, total_amount=#{totalAmount}, " +
-            "remaining_amount=#{remainingAmount}, monthly_payment=#{monthlyPayment}, payment_day=#{paymentDay}, " +
-            "total_periods=#{totalPeriods}, paid_periods=#{paidPeriods}, start_date=#{startDate}, " +
-            "status=#{status}, note=#{note}, updated_at=NOW() WHERE id=#{id}")
+    
+    /**
+     * 更新贷款
+     */
     int update(Loan loan);
-
-    @Delete("DELETE FROM loans WHERE id = #{id}")
-    int deleteById(Long id);
-
-    @Select("SELECT COUNT(*) FROM loans WHERE status = 'active'")
-    int countActive();
+    
+    /**
+     * 删除贷款
+     */
+    int deleteById(@Param("id") Long id);
+    
+    /**
+     * 统计贷款数量
+     */
+    int countByStatus(@Param("status") String status);
 }
-

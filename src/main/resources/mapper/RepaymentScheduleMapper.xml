@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finance.loans.mapper.RepaymentScheduleMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="RepaymentScheduleResultMap" type="com.finance.loans.model.RepaymentSchedule">
+        <id property="id" column="id"/>
+        <result property="loanId" column="loan_id"/>
+        <result property="period" column="period"/>
+        <result property="dueDate" column="due_date"/>
+        <result property="amount" column="amount"/>
+        <result property="status" column="status"/>
+        <result property="paidDate" column="paid_date"/>
+        <result property="paidAmount" column="paid_amount"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 根据贷款ID查询还款计划 -->
+    <select id="findByLoanId" resultMap="RepaymentScheduleResultMap">
+        SELECT * FROM repayment_schedule 
+        WHERE loan_id = #{loanId} 
+        ORDER BY period ASC
+    </select>
+
+    <!-- 根据贷款ID和状态查询还款计划 -->
+    <select id="findByLoanIdAndStatus" resultMap="RepaymentScheduleResultMap">
+        SELECT * FROM repayment_schedule 
+        WHERE 1=1
+        <if test="loanId != null">
+            AND loan_id = #{loanId}
+        </if>
+        AND status = #{status}
+        ORDER BY period ASC
+    </select>
+
+    <!-- 查询指定月份的还款计划 -->
+    <select id="findByMonth" resultMap="RepaymentScheduleResultMap">
+        SELECT * FROM repayment_schedule 
+        WHERE YEAR(due_date) = #{year} AND MONTH(due_date) = #{month}
+        ORDER BY due_date ASC
+    </select>
+
+    <!-- 查询指定日期范围的还款计划 -->
+    <select id="findByDateRange" resultMap="RepaymentScheduleResultMap">
+        SELECT * FROM repayment_schedule 
+        WHERE due_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY due_date ASC
+    </select>
+
+    <!-- 根据ID查询 -->
+    <select id="findById" resultMap="RepaymentScheduleResultMap">
+        SELECT * FROM repayment_schedule WHERE id = #{id}
+    </select>
+
+    <!-- 插入还款计划 -->
+    <insert id="insert" parameterType="com.finance.loans.model.RepaymentSchedule" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO repayment_schedule (
+            loan_id, period, due_date, amount, status, paid_date, paid_amount
+        ) VALUES (
+            #{loanId}, #{period}, #{dueDate}, #{amount}, #{status}, #{paidDate}, #{paidAmount}
+        )
+    </insert>
+
+    <!-- 批量插入还款计划 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO repayment_schedule (
+            loan_id, period, due_date, amount, status
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.loanId}, #{item.period}, #{item.dueDate}, #{item.amount}, #{item.status})
+        </foreach>
+    </insert>
+
+    <!-- 更新还款计划 -->
+    <update id="update" parameterType="com.finance.loans.model.RepaymentSchedule">
+        UPDATE repayment_schedule SET
+            status = #{status},
+            paid_date = #{paidDate},
+            paid_amount = #{paidAmount}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 批量更新状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE repayment_schedule SET
+            status = #{status},
+            paid_date = #{paidDate},
+            paid_amount = amount
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 删除贷款的所有计划 -->
+    <delete id="deleteByLoanId">
+        DELETE FROM repayment_schedule WHERE loan_id = #{loanId}
+    </delete>
+
+</mapper>

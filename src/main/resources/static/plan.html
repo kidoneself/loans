@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>还款规划 - 贷款管理系统 v3.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root { --primary-color: #4f46e5; --success-color: #10b981; --warning-color: #f59e0b; }
+        body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .navbar { background: linear-gradient(135deg, var(--primary-color) 0%, #6366f1 100%); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem; border-radius: 16px; margin-bottom: 2rem; text-align: center; }
+        .countdown-box { background: rgba(255,255,255,0.2); border-radius: 12px; padding: 2rem; margin: 1rem 0; }
+        .countdown-number { font-size: 4rem; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .stat-card { border: none; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.2s; height: 100%; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .timeline-container { background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem; overflow-x: auto; }
+        .timeline-item { background: white; border: 2px solid var(--warning-color); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+        .chart-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .progress-item { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .progress-bar-custom { height: 10px; border-radius: 5px; background: #e5e7eb; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--success-color) 0%, #34d399 100%); transition: width 0.3s; }
+        .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; font-weight: 700; font-size: 0.875rem; }
+        .rank-1 { background: #ffd700; color: #fff; }
+        .rank-2 { background: #c0c0c0; color: #fff; }
+        .rank-3 { background: #cd7f32; color: #fff; }
+        .rank-other { background: #e5e7eb; color: #6b7280; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/"><i class="bi bi-wallet2 me-2"></i>贷款管理系统 v3.0</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-door me-1"></i>首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="calendar.html"><i class="bi bi-calendar3 me-1"></i>日历</a></li>
+                    <li class="nav-item"><a class="nav-link" href="trend.html"><i class="bi bi-graph-up me-1"></i>趋势</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="plan.html"><i class="bi bi-calendar-check me-1"></i>规划</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1 class="mb-3"><i class="bi bi-trophy me-3"></i>还款规划</h1>
+            <div class="countdown-box">
+                <div class="countdown-number" id="debtFreeCountdown">-</div>
+                <h3>距离完全无债</h3>
+                <p class="mb-0" id="debtFreeDate">-</p>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-3"><div class="card stat-card"><div class="card-body"><small class="text-muted d-block mb-1">最快还清</small><h4 class="mb-0 text-success" id="fastestLoan">-</h4><small class="text-muted" id="fastestDays">-</small></div></div></div>
+            <div class="col-md-3"><div class="card stat-card"><div class="card-body"><small class="text-muted d-block mb-1">最晚还清</small><h4 class="mb-0 text-warning" id="latestLoan">-</h4><small class="text-muted" id="latestDays">-</small></div></div></div>
+            <div class="col-md-3"><div class="card stat-card"><div class="card-body"><small class="text-muted d-block mb-1">平均进度</small><h4 class="mb-0 text-primary" id="avgProgress">-</h4><small class="text-muted">所有贷款</small></div></div></div>
+            <div class="col-md-3"><div class="card stat-card"><div class="card-body"><small class="text-muted d-block mb-1">总剩余期数</small><h4 class="mb-0 text-danger" id="totalRemaining">-</h4><small class="text-muted">合计</small></div></div></div>
+        </div>
+
+        <div class="timeline-container">
+            <h5 class="mb-3"><i class="bi bi-calendar-event me-2"></i>还清时间线</h5>
+            <div id="timelineList"></div>
+        </div>
+
+        <div class="chart-card mb-4">
+            <h5 class="mb-3"><i class="bi bi-graph-down me-2"></i>未来月供趋势</h5>
+            <canvas id="paymentChart" height="80"></canvas>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h5 class="mb-3"><i class="bi bi-speedometer2 me-2"></i>还款进度排行</h5>
+                    <div id="progressRanking"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h5 class="mb-3"><i class="bi bi-alarm me-2"></i>还清时间排行</h5>
+                    <div id="timeRanking"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>贷款进度详情</h5>
+                <div class="d-flex gap-2">
+                    <div class="btn-group btn-group-sm" role="group" id="sortButtons">
+                        <button type="button" class="btn btn-outline-primary active" data-sort="time" onclick="sortDetails('time')">
+                            <i class="bi bi-clock me-1"></i>按时间
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" data-sort="progress" onclick="sortDetails('progress')">
+                            <i class="bi bi-speedometer2 me-1"></i>按进度
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" data-sort="amount" onclick="sortDetails('amount')">
+                            <i class="bi bi-currency-dollar me-1"></i>按金额
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="orderButton" onclick="toggleOrder()">
+                        <i class="bi bi-sort-down" id="orderIcon"></i>
+                        <span id="orderText">降序</span>
+                    </button>
+                </div>
+            </div>
+            <div id="progressList"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = '/api';
+        let chart;
+        let currentLoansData = [];
+        let currentSort = 'time';
+        let isDescending = true;
+
+        document.addEventListener('DOMContentLoaded', loadData);
+
+        async function loadData() {
+            try {
+                const response = await fetch(`${API_BASE}/loans`);
+                const allLoans = await response.json();
+                const activeLoans = allLoans.filter(l => l.status === 'active');
+
+                const loansData = [];
+                for (const loan of activeLoans) {
+                    const schedRes = await fetch(`${API_BASE}/schedules/loan/${loan.id}`);
+                    const schedules = await schedRes.json();
+                    const pending = schedules.filter(s => s.status === 'pending');
+                    const paid = schedules.filter(s => s.status === 'paid');
+                    
+                    if (pending.length > 0) {
+                        const lastDue = new Date(pending[pending.length - 1].dueDate);
+                        const days = Math.ceil((lastDue - new Date()) / 86400000);
+                        loansData.push({
+                            name: loan.name,
+                            platform: loan.platform,
+                            monthlyAmount: loan.monthlyAmount,
+                            total: schedules.length,
+                            paid: paid.length,
+                            remaining: pending.length,
+                            progress: ((paid.length / schedules.length) * 100).toFixed(1),
+                            days: days,
+                            finishDate: lastDue,
+                            remainingAmount: pending.reduce((sum, s) => sum + s.amount, 0)
+                        });
+                    }
+                }
+
+                if (loansData.length === 0) {
+                    document.getElementById('debtFreeCountdown').textContent = '🎉';
+                    document.getElementById('debtFreeDate').textContent = '恭喜！已无债一身轻！';
+                    return;
+                }
+
+                currentLoansData = loansData;
+                renderCountdown(loansData);
+                renderMetrics(loansData);
+                renderTimeline(loansData);
+                renderChart(loansData);
+                renderRankings(loansData);
+                renderDetails(loansData, currentSort, isDescending);
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        function renderCountdown(data) {
+            const latest = data.reduce((max, item) => item.days > max.days ? item : max);
+            document.getElementById('debtFreeCountdown').textContent = latest.days + ' 天';
+            document.getElementById('debtFreeDate').textContent = '预计 ' + latest.finishDate.toLocaleDateString('zh-CN');
+        }
+
+        function renderMetrics(data) {
+            const fastest = data.reduce((min, item) => item.remaining < min.remaining ? item : min);
+            const latest = data.reduce((max, item) => item.remaining > max.remaining ? item : max);
+            const avgProgress = (data.reduce((sum, item) => sum + parseFloat(item.progress), 0) / data.length).toFixed(1);
+            const totalRemaining = data.reduce((sum, item) => sum + item.remaining, 0);
+
+            document.getElementById('fastestLoan').textContent = fastest.name;
+            document.getElementById('fastestDays').textContent = `还剩${fastest.remaining}期 · ${fastest.days}天`;
+            document.getElementById('latestLoan').textContent = latest.name;
+            document.getElementById('latestDays').textContent = `还剩${latest.remaining}期 · ${latest.days}天`;
+            document.getElementById('avgProgress').textContent = avgProgress + '%';
+            document.getElementById('totalRemaining').textContent = totalRemaining + '期';
+        }
+
+        function renderTimeline(data) {
+            const sorted = [...data].sort((a, b) => a.days - b.days);
+            let html = '';
+            sorted.forEach((item, idx) => {
+                html += `
+                    <div class="timeline-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${item.name} <small class="text-muted">${item.platform}</small></h6>
+                                <small class="text-muted">预计还清：${item.finishDate.toLocaleDateString('zh-CN')}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-warning">${item.remaining}期</span>
+                                <div><small class="text-muted">${item.days}天后</small></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('timelineList').innerHTML = html;
+        }
+
+        function renderChart(data) {
+            const months = [];
+            const values = [];
+            const today = new Date();
+            
+            for (let i = 0; i < 12; i++) {
+                const month = new Date(today);
+                month.setMonth(month.getMonth() + i);
+                months.push(month.getFullYear() + '-' + String(month.getMonth() + 1).padStart(2, '0'));
+                
+                let total = 0;
+                data.forEach(item => {
+                    if (item.finishDate >= month) total += item.monthlyAmount;
+                });
+                values.push(total);
+            }
+
+            const ctx = document.getElementById('paymentChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: '月供',
+                        data: values,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245,158,11,0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => '¥' + (v/1000).toFixed(0) + 'K' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderRankings(data) {
+            const byProgress = [...data].sort((a, b) => parseFloat(b.progress) - parseFloat(a.progress));
+            let html1 = '';
+            byProgress.forEach((item, idx) => {
+                const rank = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-other';
+                html1 += `
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rank-badge ${rank} me-3">${idx + 1}</div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-bold">${item.name}</span>
+                                <span class="badge bg-primary">${item.progress}%</span>
+                            </div>
+                            <div class="progress-bar-custom">
+                                <div class="progress-fill" style="width: ${item.progress}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('progressRanking').innerHTML = html1;
+
+            const byTime = [...data].sort((a, b) => a.remaining - b.remaining);
+            let html2 = '';
+            byTime.forEach((item, idx) => {
+                const rank = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : 'rank-other';
+                html2 += `
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rank-badge ${rank} me-3">${idx + 1}</div>
+                            <div>
+                                <div class="fw-bold">${item.name}</div>
+                                <small class="text-muted">${item.platform}</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-warning">${item.remaining}期</span>
+                    </div>
+                `;
+            });
+            document.getElementById('timeRanking').innerHTML = html2;
+        }
+
+        function sortDetails(sortType) {
+            currentSort = sortType;
+            
+            // 更新按钮状态
+            document.querySelectorAll('#sortButtons button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.sort === sortType) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // 重新渲染
+            renderDetails(currentLoansData, sortType, isDescending);
+        }
+        
+        function toggleOrder() {
+            isDescending = !isDescending;
+            
+            // 更新按钮显示
+            const icon = document.getElementById('orderIcon');
+            const text = document.getElementById('orderText');
+            
+            if (isDescending) {
+                icon.className = 'bi bi-sort-down';
+                text.textContent = '降序';
+            } else {
+                icon.className = 'bi bi-sort-up';
+                text.textContent = '升序';
+            }
+            
+            // 重新渲染
+            renderDetails(currentLoansData, currentSort, isDescending);
+        }
+
+        function renderDetails(data, sortType = 'time', descending = true) {
+            // 根据排序类型排序
+            // 降序：时间（期数少）、进度（高）、金额（多）
+            // 升序：时间（期数多）、进度（低）、金额（少）
+            let sorted = [...data];
+            if (sortType === 'time') {
+                // 降序：快还完的在前（期数少）；升序：慢的在前（期数多）
+                sorted.sort((a, b) => descending ? a.remaining - b.remaining : b.remaining - a.remaining);
+            } else if (sortType === 'progress') {
+                // 降序：进度高的在前；升序：进度低的在前
+                sorted.sort((a, b) => descending ? parseFloat(b.progress) - parseFloat(a.progress) : parseFloat(a.progress) - parseFloat(b.progress));
+            } else if (sortType === 'amount') {
+                // 降序：欠得多的在前；升序：欠得少的在前
+                sorted.sort((a, b) => descending ? b.remainingAmount - a.remainingAmount : a.remainingAmount - b.remainingAmount);
+            }
+            
+            let html = '';
+            sorted.forEach(item => {
+                html += `
+                    <div class="progress-item">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="mb-1">${item.name}</h5>
+                                <small class="text-muted">${item.platform}</small>
+                            </div>
+                            <span class="badge bg-warning fs-6">${item.remaining}期</span>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">还款进度</small>
+                                <strong class="text-primary">${item.paid}/${item.total}期 (${item.progress}%)</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">剩余金额</small>
+                                <strong class="text-danger">¥${item.remainingAmount.toLocaleString('zh-CN', {minimumFractionDigits: 2})}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">月供</small>
+                                <strong>¥${item.monthlyAmount.toLocaleString('zh-CN', {minimumFractionDigits: 2})}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">还清日期</small>
+                                <strong class="text-success">${item.finishDate.toLocaleDateString('zh-CN')}</strong>
+                            </div>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" style="width: ${item.progress}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('progressList').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

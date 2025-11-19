@@ -1,9 +1,12 @@
-# 应用配置（主配置文件）
+# =============================================
+# 贷款管理系统 v3.0 - 主配置文件
+# =============================================
+
 spring:
   application:
-    name: loans-management-system
+    name: loans-management-v3
   
-  # 环境配置（IDEA 运行时使用，Maven 打包时可通过启动参数覆盖）
+  # 环境配置
   profiles:
     active: test
   
@@ -12,6 +15,19 @@ spring:
     resources:
       static-locations: classpath:/static/
       add-mappings: true
+  
+  # 数据源配置（开发环境）
+  datasource:
+    url: jdbc:mysql://localhost:3306/loansv2?useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Shanghai
+    username: loans
+    password: loans123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
 # MyBatis 配置
 mybatis:
@@ -23,7 +39,9 @@ mybatis:
 
 # 服务器配置
 server:
-  port: 8080
+  port: 8081
+  servlet:
+    context-path: /
 
 # 日志配置
 logging:
@@ -31,13 +49,4 @@ logging:
     root: INFO
     com.finance.loans: DEBUG
     com.finance.loans.mapper: DEBUG
-
-# 业务配置
-loan:
-  auto-update:
-    # 是否启用自动更新已还期数（默认：false，需要手动开启）
-    enabled: true
-    # 每月还款日后，自动增加已还期数（假设用户按时还款）
-    # 如果设置为 false，需要手动记录还款
-    # 建议：如果您能保证按时还款，可以设置为 true
 

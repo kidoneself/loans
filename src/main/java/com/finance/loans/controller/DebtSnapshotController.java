@@ -2,60 +2,78 @@ package com.finance.loans.controller;
 
 import com.finance.loans.model.DebtSnapshot;
 import com.finance.loans.service.DebtSnapshotService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 债务快照控制器
+ * 负债快照控制器
  */
 @RestController
-@RequestMapping("/api/debt-snapshot")
-@RequiredArgsConstructor
+@RequestMapping("/api/snapshots")
 public class DebtSnapshotController {
     
-    private final DebtSnapshotService snapshotService;
+    @Autowired
+    private DebtSnapshotService snapshotService;
     
     /**
-     * 手动创建今天的快照
+     * 获取所有快照
      */
-    @PostMapping("/create")
-    public ResponseEntity<DebtSnapshot> createSnapshot() {
-        DebtSnapshot snapshot = snapshotService.createSnapshot(LocalDate.now());
+    @GetMapping
+    public ResponseEntity<List<DebtSnapshot>> getAllSnapshots() {
+        return ResponseEntity.ok(snapshotService.getAllSnapshots());
+    }
+    
+    /**
+     * 获取最新快照
+     */
+    @GetMapping("/latest")
+    public ResponseEntity<DebtSnapshot> getLatestSnapshot() {
+        DebtSnapshot snapshot = snapshotService.getLatestSnapshot();
+        if (snapshot == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(snapshot);
     }
     
     /**
-     * 获取日趋势（按天）
+     * 获取最近N天的快照
      */
-    @GetMapping("/trend/daily")
-    public ResponseEntity<List<Map<String, Object>>> getDailyTrend(
-            @RequestParam(defaultValue = "30") int days) {
-        List<Map<String, Object>> trend = snapshotService.getDailyTrend(days);
-        return ResponseEntity.ok(trend);
+    @GetMapping("/recent/{days}")
+    public ResponseEntity<List<DebtSnapshot>> getRecentSnapshots(@PathVariable int days) {
+        return ResponseEntity.ok(snapshotService.getRecentSnapshots(days));
     }
     
     /**
-     * 获取月趋势（按月）
+     * 获取指定日期范围的快照
      */
-    @GetMapping("/trend/monthly")
-    public ResponseEntity<List<Map<String, Object>>> getMonthlyTrend(
-            @RequestParam(defaultValue = "12") int months) {
-        List<Map<String, Object>> trend = snapshotService.getMonthlyTrend(months);
-        return ResponseEntity.ok(trend);
+    @GetMapping("/range")
+    public ResponseEntity<List<DebtSnapshot>> getSnapshotsByDateRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ResponseEntity.ok(snapshotService.getSnapshotsByDateRange(startDate, endDate));
     }
     
     /**
-     * 获取统计数据
+     * 手动创建快照
      */
-    @GetMapping("/statistics")
-    public ResponseEntity<Map<String, Object>> getStatistics() {
-        Map<String, Object> stats = snapshotService.getStatistics();
-        return ResponseEntity.ok(stats);
+    @PostMapping("/create")
+    public ResponseEntity<Map<String, String>> createSnapshot() {
+        try {
+            snapshotService.createSnapshot(LocalDate.now(), "daily");
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "快照创建成功");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 }
-

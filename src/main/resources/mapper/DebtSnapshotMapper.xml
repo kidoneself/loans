@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.finance.loans.mapper.DebtSnapshotMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="DebtSnapshotResultMap" type="com.finance.loans.model.DebtSnapshot">
+        <id property="id" column="id"/>
+        <result property="snapshotDate" column="snapshot_date"/>
+        <result property="totalDebt" column="total_debt"/>
+        <result property="totalPrincipal" column="total_principal"/>
+        <result property="paidAmount" column="paid_amount"/>
+        <result property="remainingAmount" column="remaining_amount"/>
+        <result property="activeLoans" column="active_loans"/>
+        <result property="completedLoans" column="completed_loans"/>
+        <result property="monthlyPayment" column="monthly_payment"/>
+        <result property="snapshotType" column="snapshot_type"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 查询所有快照 -->
+    <select id="findAll" resultMap="DebtSnapshotResultMap">
+        SELECT * FROM debt_snapshot 
+        ORDER BY snapshot_date DESC
+    </select>
+
+    <!-- 查询指定日期范围的快照 -->
+    <select id="findByDateRange" resultMap="DebtSnapshotResultMap">
+        SELECT * FROM debt_snapshot 
+        WHERE snapshot_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY snapshot_date ASC
+    </select>
+
+    <!-- 查询最新快照 -->
+    <select id="findLatest" resultMap="DebtSnapshotResultMap">
+        SELECT * FROM debt_snapshot 
+        ORDER BY snapshot_date DESC 
+        LIMIT 1
+    </select>
+
+    <!-- 根据日期和类型查询 -->
+    <select id="findByDateAndType" resultMap="DebtSnapshotResultMap">
+        SELECT * FROM debt_snapshot 
+        WHERE snapshot_date = #{snapshotDate} AND snapshot_type = #{snapshotType}
+    </select>
+
+    <!-- 插入快照 -->
+    <insert id="insert" parameterType="com.finance.loans.model.DebtSnapshot" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO debt_snapshot (
+            snapshot_date, total_debt, total_principal, paid_amount, remaining_amount,
+            active_loans, completed_loans, monthly_payment, snapshot_type
+        ) VALUES (
+            #{snapshotDate}, #{totalDebt}, #{totalPrincipal}, #{paidAmount}, #{remainingAmount},
+            #{activeLoans}, #{completedLoans}, #{monthlyPayment}, #{snapshotType}
+        )
+    </insert>
+
+    <!-- 删除指定日期之前的快照 -->
+    <delete id="deleteBeforeDate">
+        DELETE FROM debt_snapshot WHERE snapshot_date &lt; #{date}
+    </delete>
+
+</mapper>
