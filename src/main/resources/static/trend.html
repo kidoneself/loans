@@ -94,11 +94,16 @@
             <h4 class="mb-0">
                 <i class="bi bi-graph-up-arrow me-2"></i>负债趋势分析
             </h4>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-primary" onclick="loadTrend(30, 'weekly', event)">近4周</button>
-                <button type="button" class="btn btn-outline-primary active" onclick="loadTrend(90, 'weekly', event)">近3个月(周)</button>
-                <button type="button" class="btn btn-outline-primary" onclick="loadTrend(180, 'monthly', event)">近半年</button>
-                <button type="button" class="btn btn-outline-primary" onclick="loadTrend(3650, 'monthly', event)">全部历史</button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-warning" onclick="regenerateSnapshots()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>重新生成数据
+                </button>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary" onclick="loadTrend(30, 'weekly', event)">近4周</button>
+                    <button type="button" class="btn btn-outline-primary active" onclick="loadTrend(90, 'weekly', event)">近3个月(周)</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="loadTrend(180, 'monthly', event)">近半年</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="loadTrend(3650, 'monthly', event)">全部历史</button>
+                </div>
             </div>
         </div>
 
@@ -396,6 +401,40 @@
                 
             } catch (error) {
                 console.error('加载趋势数据失败:', error);
+            }
+        }
+        
+        // 重新生成快照数据
+        async function regenerateSnapshots() {
+            if (!confirm('此操作将删除所有现有快照数据并重新生成从最早贷款开始到今天的所有历史数据，可能需要一些时间。确认继续？')) {
+                return;
+            }
+            
+            try {
+                const button = event.target.closest('button');
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>生成中...';
+                
+                const response = await fetch(`${API_BASE}/snapshots/regenerate`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(result.message);
+                    // 重新加载当前视图
+                    loadTrend(currentDays, currentDays <= 90 ? 'weekly' : 'monthly', null);
+                } else {
+                    alert('生成失败：' + result.error);
+                }
+            } catch (error) {
+                console.error('重新生成快照数据失败:', error);
+                alert('操作失败');
+            } finally {
+                const button = event.target.closest('button');
+                button.disabled = false;
+                button.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>重新生成数据';
             }
         }
     </script>

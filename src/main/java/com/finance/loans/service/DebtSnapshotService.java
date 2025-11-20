@@ -70,6 +70,53 @@ public class DebtSnapshotService {
     }
     
     /**
+     * 重新生成历史快照数据（从贷款创建日期到今天）
+     */
+    @Transactional
+    public int regenerateHistoricalSnapshots() {
+        // 删除所有现有快照
+        snapshotMapper.deleteAll();
+        
+        // 获取所有贷款中最早的开始日期
+        List<Loan> allLoans = loanMapper.findAll();
+        if (allLoans.isEmpty()) {
+            return 0;
+        }
+        
+        LocalDate earliestDate = LocalDate.now();
+        for (Loan loan : allLoans) {
+            if (loan.getStartDate() != null && loan.getStartDate().isBefore(earliestDate)) {
+                earliestDate = loan.getStartDate();
+            }
+        }
+        
+        int count = 0;
+        LocalDate currentDate = earliestDate;
+        LocalDate today = LocalDate.now();
+        
+        // 生成每日快照
+        while (!currentDate.isAfter(today)) {
+            String type = "daily";
+            
+            // 每周一创建周快照
+            if (currentDate.getDayOfWeek().getValue() == 1) {
+                type = "weekly";
+            }
+            
+            // 每月1号创建月快照
+            if (currentDate.getDayOfMonth() == 1) {
+                type = "monthly";
+            }
+            
+            createSnapshot(currentDate, type);
+            count++;
+            currentDate = currentDate.plusDays(1);
+        }
+        
+        return count;
+    }
+    
+    /**
      * 手动创建快照
      */
     @Transactional

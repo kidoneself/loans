@@ -180,8 +180,8 @@
         }
 
         function renderMetrics(data) {
-            const fastest = data.reduce((min, item) => item.remaining < min.remaining ? item : min);
-            const latest = data.reduce((max, item) => item.remaining > max.remaining ? item : max);
+            const fastest = data.reduce((min, item) => item.days < min.days ? item : min);
+            const latest = data.reduce((max, item) => item.days > max.days ? item : max);
             const avgProgress = (data.reduce((sum, item) => sum + parseFloat(item.progress), 0) / data.length).toFixed(1);
             const totalRemaining = data.reduce((sum, item) => sum + item.remaining, 0);
 

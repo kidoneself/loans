@@ -61,4 +61,9 @@
         DELETE FROM debt_snapshot WHERE snapshot_date &lt; #{date}
     </delete>
 
+    <!-- 删除所有快照 -->
+    <delete id="deleteAll">
+        DELETE FROM debt_snapshot
+    </delete>
+
 </mapper>

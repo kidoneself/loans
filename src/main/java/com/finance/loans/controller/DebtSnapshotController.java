@@ -76,4 +76,22 @@ public class DebtSnapshotController {
             return ResponseEntity.badRequest().body(error);
         }
     }
+    
+    /**
+     * 重新生成所有历史快照数据
+     */
+    @PostMapping("/regenerate")
+    public ResponseEntity<Map<String, Object>> regenerateSnapshots() {
+        try {
+            int count = snapshotService.regenerateHistoricalSnapshots();
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "成功重新生成" + count + "条快照数据");
+            response.put("count", count);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
 }

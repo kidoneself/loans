@@ -42,4 +42,9 @@ public interface DebtSnapshotMapper {
      * 删除指定日期之前的快照
      */
     int deleteBeforeDate(@Param("date") LocalDate date);
+    
+    /**
+     * 删除所有快照
+     */
+    int deleteAll();
 }
