@@ -220,7 +220,15 @@
             const values = [];
             const today = new Date();
             
-            for (let i = 0; i < 12; i++) {
+            // 找到最晚还清的日期
+            const latestFinish = data.reduce((max, item) => 
+                item.finishDate > max ? item.finishDate : max, new Date());
+            
+            // 计算需要显示多少个月（从现在到最晚还清日期）
+            const monthsDiff = Math.ceil((latestFinish - today) / (1000 * 60 * 60 * 24 * 30)) + 1;
+            const totalMonths = Math.max(monthsDiff, 12); // 至少显示12个月
+            
+            for (let i = 0; i < totalMonths; i++) {
                 const month = new Date(today);
                 month.setMonth(month.getMonth() + i);
                 months.push(month.getFullYear() + '-' + String(month.getMonth() + 1).padStart(2, '0'));
@@ -248,11 +256,26 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '月供: ¥' + context.parsed.y.toLocaleString('zh-CN', {minimumFractionDigits: 2});
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
                             ticks: { callback: v => '¥' + (v/1000).toFixed(0) + 'K' }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
                         }
                     }
                 }
